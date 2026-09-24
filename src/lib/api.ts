@@ -4,11 +4,15 @@ export async function apiRequest<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
+  const token =
+    typeof window !== "undefined" ? window.localStorage.getItem("accessToken") : null;
+
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
   });
@@ -22,13 +26,24 @@ export async function apiRequest<T>(
 }
 
 export const authApi = {
-  login: (email: string, password: string) =>
-    apiRequest<{ user: User; accessToken?: string }>("/api/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
-    }),
+  login: async (email: string, password: string) => {
+    const result = await apiRequest<{ user: User; accessToken?: string }>(
+      "/api/auth/login",
+      { method: "POST", body: JSON.stringify({ email, password }) },
+    );
+    if (result.accessToken && typeof window !== "undefined") {
+      window.localStorage.setItem("accessToken", result.accessToken);
+    }
+    return result;
+  },
   me: () => apiRequest<User>("/api/auth/me"),
-  logout: () => apiRequest<null>("/api/auth/logout", { method: "POST" }),
+  logout: async () => {
+    try {
+      return await apiRequest<null>("/api/auth/logout", { method: "POST" });
+    } finally {
+      if (typeof window !== "undefined") window.localStorage.removeItem("accessToken");
+    }
+  },
 };
 
 export type User = {

@@ -18,8 +18,9 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useState } from "react";
-import { authApi } from "@/lib/api";
+import { useEffect, useState } from "react";
+import { authApi, type User } from "@/lib/api";
+import { useRouter } from "next/navigation";
 
 const navItems = [
   { label: "Overview", icon: LayoutDashboard, active: true },
@@ -35,17 +36,34 @@ const activity = [
 ];
 
 export default function Home() {
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [checkingSession, setCheckingSession] = useState(true);
+
+  useEffect(() => {
+    authApi.me()
+      .then(setCurrentUser)
+      .catch(() => router.replace("/login"))
+      .finally(() => setCheckingSession(false));
+  }, [router]);
 
   async function handleLogout() {
     setLoggingOut(true);
     try {
       await authApi.logout();
+      router.replace("/login");
     } finally {
       setLoggingOut(false);
     }
   }
+
+  if (checkingSession) {
+    return <main className="loading-screen"><div className="loading-mark"><GraduationCap size={22} /></div><p>Loading your workspace...</p></main>;
+  }
+
+  if (!currentUser) return null;
 
   return (
     <main className="app-shell">
@@ -71,7 +89,7 @@ export default function Home() {
         </nav>
         <div className="sidebar-footer">
           <div className="help-card"><Sparkles size={19} /><strong>Need a hand?</strong><p>Explore the admin guide to get started.</p><button>View guide <ArrowUpRight size={14} /></button></div>
-          <button className="profile-chip" onClick={handleLogout} disabled={loggingOut} title="Sign out"><div className="avatar avatar-small">RS</div><div><strong>{loggingOut ? "Signing out..." : "Roisul Shohan"}</strong><span>Administrator</span></div><LogOut size={17} /></button>
+          <button className="profile-chip" onClick={handleLogout} disabled={loggingOut} title="Sign out"><div className="avatar avatar-small">{getInitials(currentUser.name)}</div><div><strong>{loggingOut ? "Signing out..." : currentUser.name}</strong><span>{formatRole(currentUser.role)}</span></div><LogOut size={17} /></button>
         </div>
       </aside>
 
@@ -84,12 +102,12 @@ export default function Home() {
           <div className="topbar-actions">
             <button className="icon-button search-button" aria-label="Search"><Search size={19} /></button>
             <button className="icon-button notification-button" aria-label="Notifications"><Bell size={19} /><i /></button>
-            <div className="top-avatar">RS</div>
+            <div className="top-avatar">{getInitials(currentUser.name)}</div>
           </div>
         </header>
 
         <div className="content-wrap">
-          <div className="welcome-row"><div><p className="eyebrow">Wednesday, September 24, 2026</p><h1>Good morning, Roisul <span>👋</span></h1><p className="subtitle">Here&apos;s what&apos;s happening across your university today.</p></div><button className="period-button">Fall 2026 <ChevronDown size={16} /></button></div>
+          <div className="welcome-row"><div><p className="eyebrow">Wednesday, September 24, 2026</p><h1>Good morning, {currentUser.name.split(" ")[0]} <span>👋</span></h1><p className="subtitle">Here&apos;s what&apos;s happening across your university today.</p></div><button className="period-button">Fall 2026 <ChevronDown size={16} /></button></div>
 
           <div className="stats-grid">
             <StatCard label="Total students" value="1,248" change="12.8%" icon={<Users size={20} />} tone="blue" />
@@ -120,4 +138,12 @@ function PanelHeading({ title, action, dropdown }: { title: string; action: stri
 
 function ScheduleItem({ time, period, title, detail, color }: { time: string; period: string; title: string; detail: string; color: string }) {
   return <div className="schedule-item"><div className="schedule-time"><strong>{time}</strong><span>{period}</span></div><div className={`schedule-marker ${color}`} /><div className="schedule-copy"><strong>{title}</strong><span>{detail}</span></div><MoreHorizontal size={18} className="muted-icon" /></div>;
+}
+
+function getInitials(name: string) {
+  return name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase();
+}
+
+function formatRole(role: User["role"]) {
+  return role === "SUPER_ADMIN" ? "Super administrator" : role.toLowerCase();
 }
