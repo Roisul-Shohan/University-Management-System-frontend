@@ -1,11 +1,19 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
-export async function apiRequest<T>(
+type ApiEnvelope<T> = {
+  data: T;
+  message: string;
+  meta?: { page: number; limit: number; total: number };
+};
+
+async function requestEnvelope<T>(
   path: string,
   options: RequestInit = {},
-): Promise<T> {
+): Promise<ApiEnvelope<T>> {
   const token =
-    typeof window !== "undefined" ? window.localStorage.getItem("accessToken") : null;
+    typeof window !== "undefined"
+      ? window.localStorage.getItem("accessToken")
+      : null;
 
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
@@ -22,7 +30,15 @@ export async function apiRequest<T>(
     throw new Error(body?.message ?? "Something went wrong. Please try again.");
   }
 
-  return body?.data as T;
+  return body as ApiEnvelope<T>;
+}
+
+export async function apiRequest<T>(
+  path: string,
+  options: RequestInit = {},
+): Promise<T> {
+  const body = await requestEnvelope<T>(path, options);
+  return body.data;
 }
 
 export const authApi = {
@@ -41,9 +57,69 @@ export const authApi = {
     try {
       return await apiRequest<null>("/api/auth/logout", { method: "POST" });
     } finally {
-      if (typeof window !== "undefined") window.localStorage.removeItem("accessToken");
+      if (typeof window !== "undefined")
+        window.localStorage.removeItem("accessToken");
     }
   },
+};
+
+export const academicPeriodsApi = {
+  list: async (params: AcademicPeriodQuery = {}) => {
+    const query = new URLSearchParams({
+      page: String(params.page ?? 1),
+      limit: String(params.limit ?? 8),
+      sortBy: "startDate",
+      sortOrder: "desc",
+      ...(params.type ? { type: params.type } : {}),
+      ...(params.isActive !== undefined
+        ? { isActive: String(params.isActive) }
+        : {}),
+    });
+    return requestEnvelope<AcademicPeriod[]>(`/api/academic-periods?${query}`);
+  },
+  create: (input: AcademicPeriodInput) =>
+    apiRequest<AcademicPeriod>("/api/academic-periods", {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+  update: (id: string, input: Partial<AcademicPeriodInput>) =>
+    apiRequest<AcademicPeriod>(`/api/academic-periods/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    }),
+  setActive: (id: string, isActive: boolean) =>
+    apiRequest<AcademicPeriod>(`/api/academic-periods/${id}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ isActive }),
+    }),
+};
+
+export const academicPeriodTypes = [
+  "ADMISSION",
+  "SEMESTER_REGISTRATION",
+  "COURSE_REGISTRATION",
+  "MIDTERM_EXAM",
+  "FINAL_EXAM",
+  "RESULT_PUBLICATION",
+] as const;
+
+export type AcademicPeriodType = (typeof academicPeriodTypes)[number];
+export type AcademicPeriodInput = {
+  type: AcademicPeriodType;
+  startDate: string;
+  endDate: string;
+};
+export type AcademicPeriod = AcademicPeriodInput & {
+  id: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+export type AcademicPeriodQuery = {
+  page?: number;
+  limit?: number;
+  type?: AcademicPeriodType;
+  isActive?: boolean;
 };
 
 export type User = {
