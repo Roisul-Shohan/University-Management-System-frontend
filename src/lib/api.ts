@@ -148,6 +148,31 @@ export const coursesApi = {
     apiRequest<null>(`/api/courses/${id}`, { method: "DELETE" }),
 };
 
+export const curriculumCoursesApi = {
+  list: (params: CurriculumCourseQuery = {}) => {
+    const query = new URLSearchParams();
+    if (params.programId) query.set("programId", params.programId);
+    if (params.year) query.set("year", String(params.year));
+    if (params.semester) query.set("semester", String(params.semester));
+    return apiRequest<CurriculumCourse[]>(`/api/curriculum-courses${query.size ? `?${query}` : ""}`);
+  },
+  create: (input: CurriculumCourseInput) =>
+    apiRequest<CurriculumCourse>("/api/curriculum-courses", { method: "POST", body: JSON.stringify(input) }),
+  update: (id: string, input: Partial<CurriculumCourseInput>) =>
+    apiRequest<CurriculumCourse>(`/api/curriculum-courses/${id}`, { method: "PATCH", body: JSON.stringify(input) }),
+  remove: (id: string) => apiRequest<null>(`/api/curriculum-courses/${id}`, { method: "DELETE" }),
+};
+
+export type CurriculumCourseInput = { programId: string; courseId: string; year: number; semester: number };
+export type CurriculumCourse = CurriculumCourseInput & {
+  id: string;
+  program: Program;
+  course: Course;
+  createdAt: string;
+  updatedAt: string;
+};
+export type CurriculumCourseQuery = { programId?: string; year?: number; semester?: number };
+
 export type CourseInput = {
   code: string;
   name: string;

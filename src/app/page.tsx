@@ -131,6 +131,10 @@ export default function Home() {
             <Settings size={19} />
             <span>Departments</span>
           </Link>
+          <Link className="nav-item" href="/curriculum-courses">
+            <BookOpen size={19} />
+            <span>Curriculum</span>
+          </Link>
           <button className="nav-item">
             <Settings size={19} />
             <span>Settings</span>
