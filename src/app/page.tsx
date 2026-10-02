@@ -128,6 +128,10 @@ export default function Home() {
             <span>Academic periods</span>
             <span className="nav-dot" />
           </Link>
+          <Link className="nav-item" href="/departments">
+            <Settings size={19} />
+            <span>Departments</span>
+          </Link>
           <button className="nav-item">
             <Settings size={19} />
             <span>Settings</span>

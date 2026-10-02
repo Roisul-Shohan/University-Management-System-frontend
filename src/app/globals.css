@@ -1340,3 +1340,128 @@ button {
     grid-template-columns: 1fr;
   }
 }
+.department-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 18px;
+  padding: 17px 20px;
+  border: 1px solid #e9e8f1;
+  border-radius: 10px;
+  background: #fff;
+}
+.department-summary div {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.department-summary strong {
+  color: #272840;
+  font-size: 22px;
+}
+.department-summary span,
+.department-summary p {
+  color: #999aaa;
+  font-size: 11px;
+}
+.department-summary p {
+  margin: 0;
+}
+.department-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+.department-card {
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+.department-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.department-symbol {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  color: #7166e6;
+  background: #eeedff;
+}
+.code-pill {
+  padding: 5px 8px;
+  border-radius: 6px;
+  color: #6f65de;
+  background: #f2f1ff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.department-card h2 {
+  margin: 19px 0 6px;
+  color: #303149;
+  font-size: 15px;
+  letter-spacing: -0.025em;
+}
+.department-card > p {
+  margin: 0;
+  color: #a0a1b0;
+  font-size: 11px;
+}
+.department-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 25px;
+  padding-top: 14px;
+  border-top: 1px solid #f0eff5;
+}
+.department-card-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  color: #7469e8;
+  background: transparent;
+  font-size: 10px;
+}
+.department-card-actions .danger-button {
+  color: #bf6c78;
+}
+.department-card-actions button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+.department-state {
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  min-height: 260px;
+  color: #a0a1b0;
+  font-size: 12px;
+}
+.department-state svg {
+  color: #8a80f2;
+}
+.department-state strong {
+  color: #53546c;
+  font-size: 13px;
+}
+@media (max-width: 900px) {
+  .department-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 600px) {
+  .department-summary {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .department-grid {
+    grid-template-columns: 1fr;
+  }
+}

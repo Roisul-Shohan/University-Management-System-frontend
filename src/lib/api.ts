@@ -94,6 +94,29 @@ export const academicPeriodsApi = {
     }),
 };
 
+export const departmentsApi = {
+  list: () => apiRequest<Department[]>("/api/departments"),
+  create: (input: DepartmentInput) =>
+    apiRequest<Department>("/api/departments", {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+  update: (id: string, input: Partial<DepartmentInput>) =>
+    apiRequest<Department>(`/api/departments/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    }),
+  remove: (id: string) =>
+    apiRequest<null>(`/api/departments/${id}`, { method: "DELETE" }),
+};
+
+export type DepartmentInput = { name: string; code: string };
+export type Department = DepartmentInput & {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export const academicPeriodTypes = [
   "ADMISSION",
   "SEMESTER_REGISTRATION",
