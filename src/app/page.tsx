@@ -24,9 +24,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 const navItems = [
-  { label: "Overview", icon: LayoutDashboard, active: true },
+  { label: "Overview", icon: LayoutDashboard, active: true, href: "/" },
   { label: "Students", icon: Users },
-  { label: "Courses", icon: BookOpen },
+  { label: "Courses", icon: BookOpen, href: "/courses" },
   { label: "Calendar", icon: CalendarDays },
 ];
 
@@ -110,14 +110,13 @@ export default function Home() {
         </div>
         <div className="workspace-label">Workspace</div>
         <nav className="main-nav" aria-label="Main navigation">
-          {navItems.map(({ label, icon: Icon, active }) => (
-            <button
-              className={`nav-item ${active ? "active" : ""}`}
-              key={label}
-            >
-              <Icon size={19} strokeWidth={active ? 2.4 : 2} />
-              <span>{label}</span>
-              {label === "Students" && <span className="nav-count">1,248</span>}
+          {navItems.map(({ label, icon: Icon, active, href }) => href ? (
+            <Link className={`nav-item ${active ? "active" : ""}`} href={href} key={label}>
+              <Icon size={19} strokeWidth={active ? 2.4 : 2} /><span>{label}</span>
+            </Link>
+          ) : (
+            <button className={`nav-item ${active ? "active" : ""}`} key={label}>
+              <Icon size={19} strokeWidth={active ? 2.4 : 2} /><span>{label}</span>{label === "Students" && <span className="nav-count">1,248</span>}
             </button>
           ))}
         </nav>

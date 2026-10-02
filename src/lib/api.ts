@@ -129,6 +129,38 @@ export const programsApi = {
     apiRequest<null>(`/api/programs/${id}`, { method: "DELETE" }),
 };
 
+export const coursesApi = {
+  list: (departmentId?: string) =>
+    apiRequest<Course[]>(
+      `/api/courses${departmentId ? `?departmentId=${encodeURIComponent(departmentId)}` : ""}`,
+    ),
+  create: (input: CourseInput) =>
+    apiRequest<Course>("/api/courses", {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+  update: (id: string, input: Partial<Omit<CourseInput, "departmentId">>) =>
+    apiRequest<Course>(`/api/courses/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    }),
+  remove: (id: string) =>
+    apiRequest<null>(`/api/courses/${id}`, { method: "DELETE" }),
+};
+
+export type CourseInput = {
+  code: string;
+  name: string;
+  credits: number;
+  departmentId: string;
+};
+export type Course = CourseInput & {
+  id: string;
+  department: Department;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export const degreeTypes = ["BSC", "MSC", "PHD"] as const;
 export type DegreeType = (typeof degreeTypes)[number];
 export type ProgramInput = { departmentId: string; degreeType: DegreeType };
