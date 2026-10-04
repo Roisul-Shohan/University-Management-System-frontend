@@ -9,15 +9,33 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import {
   departmentsApi,
   type Department,
-  type DepartmentInput,
   authApi,
   type User,
 } from "@/lib/api";
+
+const departmentSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(2, "Department name must be at least 2 characters.")
+    .max(100, "Department name cannot exceed 100 characters."),
+  code: z
+    .string()
+    .trim()
+    .min(2, "Department code must be at least 2 characters.")
+    .max(10, "Department code cannot exceed 10 characters.")
+    .transform((value) => value.toUpperCase()),
+});
+
+type DepartmentValues = z.input<typeof departmentSchema>;
 
 export default function DepartmentsPage() {
   const router = useRouter();
@@ -201,22 +219,24 @@ function DepartmentModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [name, setName] = useState(department?.name ?? "");
-  const [code, setCode] = useState(department?.code ?? "");
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<DepartmentValues>({
+    resolver: zodResolver(departmentSchema),
+    defaultValues: {
+      name: department?.name ?? "",
+      code: department?.code ?? "",
+    },
+  });
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setSaving(true);
+  async function saveDepartment(values: DepartmentValues) {
     setError("");
-    const input: DepartmentInput = {
-      name: name.trim(),
-      code: code.trim().toUpperCase(),
-    };
     try {
-      if (mode === "create") await departmentsApi.create(input);
-      else if (department) await departmentsApi.update(department.id, input);
+      if (mode === "create") await departmentsApi.create(values);
+      else if (department) await departmentsApi.update(department.id, values);
       onSaved();
     } catch (requestError) {
       setError(
@@ -224,8 +244,6 @@ function DepartmentModal({
           ? requestError.message
           : "Unable to save this department.",
       );
-    } finally {
-      setSaving(false);
     }
   }
 
@@ -243,28 +261,23 @@ function DepartmentModal({
             <X size={18} />
           </button>
         </div>
-        <form className="period-form" onSubmit={handleSubmit}>
+        <form className="period-form" onSubmit={handleSubmit(saveDepartment)}>
           <label>
             Department name
             <input
-              value={name}
-              onChange={(event) => setName(event.target.value)}
+              {...register("name")}
               placeholder="Computer Science and Engineering"
-              minLength={2}
-              maxLength={100}
-              required
             />
+            {errors.name && <span className="field-error">{errors.name.message}</span>}
           </label>
           <label>
             Department code
             <input
-              value={code}
-              onChange={(event) => setCode(event.target.value.toUpperCase())}
+              {...register("code")}
+              style={{ textTransform: "uppercase" }}
               placeholder="CSE"
-              minLength={2}
-              maxLength={10}
-              required
             />
+            {errors.code && <span className="field-error">{errors.code.message}</span>}
           </label>
           {error && <p className="form-error">{error}</p>}
           <div className="modal-actions">
@@ -275,8 +288,8 @@ function DepartmentModal({
             >
               Cancel
             </button>
-            <button type="submit" className="primary-button" disabled={saving}>
-              {saving
+            <button type="submit" className="primary-button" disabled={isSubmitting}>
+              {isSubmitting
                 ? "Saving..."
                 : mode === "create"
                   ? "Create department"
