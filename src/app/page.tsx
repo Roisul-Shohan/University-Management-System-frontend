@@ -19,7 +19,8 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { authApi, type User } from "@/lib/api";
+import { useAuth } from "./auth-provider";
+import type { User } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -53,23 +54,20 @@ const activity = [
 
 export default function Home() {
   const router = useRouter();
+  const { user: currentUser, loading: checkingSession, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [checkingSession, setCheckingSession] = useState(true);
 
   useEffect(() => {
-    authApi
-      .me()
-      .then(setCurrentUser)
-      .catch(() => router.replace("/login"))
-      .finally(() => setCheckingSession(false));
-  }, [router]);
+    if (!checkingSession && !currentUser) {
+      router.replace("/login");
+    }
+  }, [checkingSession, currentUser, router]);
 
   async function handleLogout() {
     setLoggingOut(true);
     try {
-      await authApi.logout();
+      await logout();
       router.replace("/login");
     } finally {
       setLoggingOut(false);
@@ -110,15 +108,29 @@ export default function Home() {
         </div>
         <div className="workspace-label">Workspace</div>
         <nav className="main-nav" aria-label="Main navigation">
-          {navItems.map(({ label, icon: Icon, active, href }) => href ? (
-            <Link className={`nav-item ${active ? "active" : ""}`} href={href} key={label}>
-              <Icon size={19} strokeWidth={active ? 2.4 : 2} /><span>{label}</span>
-            </Link>
-          ) : (
-            <button className={`nav-item ${active ? "active" : ""}`} key={label}>
-              <Icon size={19} strokeWidth={active ? 2.4 : 2} /><span>{label}</span>{label === "Students" && <span className="nav-count">1,248</span>}
-            </button>
-          ))}
+          {navItems.map(({ label, icon: Icon, active, href }) =>
+            href ? (
+              <Link
+                className={`nav-item ${active ? "active" : ""}`}
+                href={href}
+                key={label}
+              >
+                <Icon size={19} strokeWidth={active ? 2.4 : 2} />
+                <span>{label}</span>
+              </Link>
+            ) : (
+              <button
+                className={`nav-item ${active ? "active" : ""}`}
+                key={label}
+              >
+                <Icon size={19} strokeWidth={active ? 2.4 : 2} />
+                <span>{label}</span>
+                {label === "Students" && (
+                  <span className="nav-count">1,248</span>
+                )}
+              </button>
+            ),
+          )}
         </nav>
         <div className="workspace-label secondary-label">Manage</div>
         <nav className="main-nav">
