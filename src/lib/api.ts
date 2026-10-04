@@ -50,6 +50,9 @@ export const authApi = {
     if (result.accessToken && typeof window !== "undefined") {
       window.localStorage.setItem("accessToken", result.accessToken);
     }
+    if (typeof document !== "undefined") {
+      document.cookie = "northstar-session=active; Path=/; SameSite=Lax";
+    }
     return result;
   },
   me: () => apiRequest<User>("/api/auth/me"),
@@ -59,6 +62,9 @@ export const authApi = {
     } finally {
       if (typeof window !== "undefined")
         window.localStorage.removeItem("accessToken");
+      if (typeof document !== "undefined") {
+        document.cookie = "northstar-session=; Path=/; Max-Age=0; SameSite=Lax";
+      }
     }
   },
 };
@@ -154,16 +160,30 @@ export const curriculumCoursesApi = {
     if (params.programId) query.set("programId", params.programId);
     if (params.year) query.set("year", String(params.year));
     if (params.semester) query.set("semester", String(params.semester));
-    return apiRequest<CurriculumCourse[]>(`/api/curriculum-courses${query.size ? `?${query}` : ""}`);
+    return apiRequest<CurriculumCourse[]>(
+      `/api/curriculum-courses${query.size ? `?${query}` : ""}`,
+    );
   },
   create: (input: CurriculumCourseInput) =>
-    apiRequest<CurriculumCourse>("/api/curriculum-courses", { method: "POST", body: JSON.stringify(input) }),
+    apiRequest<CurriculumCourse>("/api/curriculum-courses", {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
   update: (id: string, input: Partial<CurriculumCourseInput>) =>
-    apiRequest<CurriculumCourse>(`/api/curriculum-courses/${id}`, { method: "PATCH", body: JSON.stringify(input) }),
-  remove: (id: string) => apiRequest<null>(`/api/curriculum-courses/${id}`, { method: "DELETE" }),
+    apiRequest<CurriculumCourse>(`/api/curriculum-courses/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    }),
+  remove: (id: string) =>
+    apiRequest<null>(`/api/curriculum-courses/${id}`, { method: "DELETE" }),
 };
 
-export type CurriculumCourseInput = { programId: string; courseId: string; year: number; semester: number };
+export type CurriculumCourseInput = {
+  programId: string;
+  courseId: string;
+  year: number;
+  semester: number;
+};
 export type CurriculumCourse = CurriculumCourseInput & {
   id: string;
   program: Program;
@@ -171,7 +191,11 @@ export type CurriculumCourse = CurriculumCourseInput & {
   createdAt: string;
   updatedAt: string;
 };
-export type CurriculumCourseQuery = { programId?: string; year?: number; semester?: number };
+export type CurriculumCourseQuery = {
+  programId?: string;
+  year?: number;
+  semester?: number;
+};
 
 export type CourseInput = {
   code: string;
@@ -239,3 +263,4 @@ export type User = {
   role: "STUDENT" | "TEACHER" | "SUPER_ADMIN";
   status?: string;
 };
+
