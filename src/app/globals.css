@@ -873,6 +873,12 @@ button {
   font-size: 11px;
   line-height: 1.4;
 }
+.field-error {
+  color: #aa4355;
+  display: block;
+  font-size: 11px;
+  margin-top: 5px;
+}
 .submit-button {
   display: flex;
   align-items: center;

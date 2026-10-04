@@ -9,25 +9,40 @@ import {
   Mail,
   ShieldCheck,
 } from "lucide-react";
-import { FormEvent, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { authApi } from "@/lib/api";
 import { demoAccounts } from "@/lib/demo-accounts";
 
+const loginSchema = z.object({
+  email: z.string().trim().email("Enter a valid email address."),
+  password: z.string().min(6, "Password must be at least 6 characters."),
+});
+
+type LoginValues = z.infer<typeof loginSchema>;
+
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+  });
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function submitLogin(values: LoginValues) {
     setError("");
     setLoading(true);
     try {
-      await authApi.login(email.trim(), password);
+      await authApi.login(values.email, values.password);
       router.replace("/");
     } catch (requestError) {
       setError(
@@ -97,7 +112,7 @@ export default function LoginPage() {
             <h2>Sign in to your workspace</h2>
             <p>Use your university account to continue.</p>
           </div>
-          <form onSubmit={handleSubmit} className="auth-form">
+          <form onSubmit={handleSubmit(submitLogin)} className="auth-form">
             <label htmlFor="email">
               Email address
               <div className="input-wrap">
@@ -105,13 +120,13 @@ export default function LoginPage() {
                 <input
                   id="email"
                   type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
+                  {...register("email")}
                   placeholder="you@northstar.edu"
                   required
                   autoComplete="email"
                 />
               </div>
+              {errors.email && <span className="field-error">{errors.email.message}</span>}
             </label>
             <label htmlFor="password">
               Password
@@ -120,8 +135,7 @@ export default function LoginPage() {
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
+                  {...register("password")}
                   placeholder="Enter your password"
                   required
                   minLength={6}
@@ -133,6 +147,7 @@ export default function LoginPage() {
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+              {errors.password && <span className="field-error">{errors.password.message}</span>}
                 </button>
               </div>
             </label>
