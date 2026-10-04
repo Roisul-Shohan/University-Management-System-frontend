@@ -6,13 +6,10 @@ import {
   GraduationCap,
   ShieldCheck,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import {
-  admissionsApi,
-  paymentsApi,
-  type Admission,
-} from "@/lib/payments-api";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { admissionsApi, paymentsApi, type Admission } from "@/lib/payments-api";
 import styles from "./payments.module.css";
 
 const payableStatuses = new Set(["APPROVED"]);
@@ -27,47 +24,28 @@ function formatAmount(amount: string | number) {
 
 export default function PaymentsPage() {
   const router = useRouter();
-  const [admissions, setAdmissions] = useState<Admission[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [payingId, setPayingId] = useState<string | null>(null);
-  const [error, setError] = useState("");
+  const admissionsQuery = useQuery({
+    queryKey: ["admissions", "mine"],
+    queryFn: admissionsApi.mine,
+    retry: false,
+  });
+  const paymentMutation = useMutation({
+    mutationFn: paymentsApi.initiateAdmission,
+    onSuccess: (payment) => window.location.assign(payment.bkash.bkashURL),
+  });
+  const admissions = admissionsQuery.data ?? [];
+  const loading = admissionsQuery.isPending;
+  const requestError = admissionsQuery.error ?? paymentMutation.error;
+  const error = requestError instanceof Error ? requestError.message : "";
 
   useEffect(() => {
-    admissionsApi
-      .mine()
-      .then(setAdmissions)
-      .catch((requestError) => {
-        if (
-          requestError instanceof Error &&
-          requestError.message.toLowerCase().includes("unauthorized")
-        ) {
-          router.replace("/login");
-          return;
-        }
-        setError(
-          requestError instanceof Error
-            ? requestError.message
-            : "Unable to load admissions.",
-        );
-      })
-      .finally(() => setLoading(false));
-  }, [router]);
-
-  async function startPayment(admission: Admission) {
-    setError("");
-    setPayingId(admission.id);
-    try {
-      const payment = await paymentsApi.initiateAdmission(admission.id);
-      window.location.assign(payment.bkash.bkashURL);
-    } catch (requestError) {
-      setError(
-        requestError instanceof Error
-          ? requestError.message
-          : "Unable to start bKash payment.",
-      );
-      setPayingId(null);
+    if (
+      admissionsQuery.error instanceof Error &&
+      admissionsQuery.error.message.toLowerCase().includes("unauthorized")
+    ) {
+      router.replace("/login");
     }
-  }
+  }, [admissionsQuery.error, router]);
 
   return (
     <main className={styles.page}>
@@ -151,10 +129,10 @@ export default function PaymentsPage() {
               ) : canPay ? (
                 <button
                   className={styles.payButton}
-                  onClick={() => startPayment(admission)}
-                  disabled={payingId === admission.id}
+                  onClick={() => paymentMutation.mutate(admission.id)}
+                  disabled={paymentMutation.isPending}
                 >
-                  {payingId === admission.id
+                  {paymentMutation.isPending
                     ? "Opening bKash…"
                     : "Pay with bKash"}
                   <ArrowUpRight size={17} />
