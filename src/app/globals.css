@@ -903,6 +903,49 @@ button {
   text-align: center;
   margin: 34px 0 0;
 }
+.demo-login {
+  border-top: 1px solid var(--line);
+  margin-top: 22px;
+  padding-top: 18px;
+}
+.demo-login-title {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  margin: 0 0 10px;
+  text-transform: uppercase;
+}
+.demo-login-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, 1fr);
+}
+.demo-login-button {
+  background: #f7f7fb;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--ink);
+  padding: 10px 8px;
+  text-align: left;
+}
+.demo-login-button:hover:not(:disabled) {
+  background: #f0efff;
+  border-color: #c8c2ff;
+}
+.demo-login-button:disabled {
+  cursor: wait;
+  opacity: .6;
+}
+.demo-login-button strong,
+.demo-login-button span {
+  display: block;
+}
+.demo-login-button strong { font-size: 11px; }
+.demo-login-button span { color: var(--muted); font-size: 9px; margin-top: 3px; }
+@media (max-width: 480px) {
+  .demo-login-grid { grid-template-columns: 1fr; }
+}
 .auth-footnote span {
   color: #7064e5;
   font-weight: 700;
