@@ -12,7 +12,10 @@ import {
   ToggleLeft,
   X,
 } from "lucide-react";
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import {
   academicPeriodsApi,
@@ -31,6 +34,26 @@ const labels: Record<AcademicPeriodType, string> = {
   FINAL_EXAM: "Final exams",
   RESULT_PUBLICATION: "Result publication",
 };
+
+const academicPeriodSchema = z
+  .object({
+    type: z.enum([
+      "ADMISSION",
+      "SEMESTER_REGISTRATION",
+      "COURSE_REGISTRATION",
+      "MIDTERM_EXAM",
+      "FINAL_EXAM",
+      "RESULT_PUBLICATION",
+    ]),
+    startDate: z.string().min(1, "Start date is required."),
+    endDate: z.string().min(1, "End date is required."),
+  })
+  .refine((values) => values.startDate < values.endDate, {
+    message: "Start date must be before end date.",
+    path: ["startDate"],
+  });
+
+type AcademicPeriodValues = z.infer<typeof academicPeriodSchema>;
 
 export default function AcademicPeriodsPage() {
   const router = useRouter();
@@ -275,18 +298,20 @@ function CreatePeriodModal({
   onClose: () => void;
   onCreated: () => void;
 }) {
-  const [type, setType] = useState<AcademicPeriodType>("ADMISSION");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<AcademicPeriodValues>({
+    resolver: zodResolver(academicPeriodSchema),
+    defaultValues: { type: "ADMISSION", startDate: "", endDate: "" },
+  });
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setSaving(true);
+  async function createPeriod(values: AcademicPeriodValues) {
     setError("");
     try {
-      await academicPeriodsApi.create({ type, startDate, endDate });
+      await academicPeriodsApi.create(values);
       onCreated();
     } catch (requestError) {
       setError(
@@ -294,8 +319,6 @@ function CreatePeriodModal({
           ? requestError.message
           : "Unable to create this period.",
       );
-    } finally {
-      setSaving(false);
     }
   }
 
@@ -311,40 +334,28 @@ function CreatePeriodModal({
             <X size={18} />
           </button>
         </div>
-        <form className="period-form" onSubmit={handleSubmit}>
+        <form className="period-form" onSubmit={handleSubmit(createPeriod)}>
           <label>
             Period type
-            <select
-              value={type}
-              onChange={(event) =>
-                setType(event.target.value as AcademicPeriodType)
-              }
-            >
+            <select {...register("type")}>
               {academicPeriodTypes.map((periodType) => (
                 <option key={periodType} value={periodType}>
                   {labels[periodType]}
                 </option>
               ))}
             </select>
+            {errors.type && <span className="field-error">{errors.type.message}</span>}
           </label>
           <div className="date-fields">
             <label>
               Starts
-              <input
-                type="date"
-                value={startDate}
-                onChange={(event) => setStartDate(event.target.value)}
-                required
-              />
+              <input type="date" {...register("startDate")} />
+              {errors.startDate && <span className="field-error">{errors.startDate.message}</span>}
             </label>
             <label>
               Ends
-              <input
-                type="date"
-                value={endDate}
-                onChange={(event) => setEndDate(event.target.value)}
-                required
-              />
+              <input type="date" {...register("endDate")} />
+              {errors.endDate && <span className="field-error">{errors.endDate.message}</span>}
             </label>
           </div>
           {error && <p className="form-error">{error}</p>}
@@ -356,8 +367,8 @@ function CreatePeriodModal({
             >
               Cancel
             </button>
-            <button type="submit" className="primary-button" disabled={saving}>
-              {saving ? "Creating..." : "Create period"}
+            <button type="submit" className="primary-button" disabled={isSubmitting}>
+              {isSubmitting ? "Creating..." : "Create period"}
             </button>
           </div>
         </form>
