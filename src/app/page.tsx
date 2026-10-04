@@ -5,6 +5,7 @@ import {
   Bell,
   BookOpen,
   CalendarDays,
+  CreditCard,
   ChevronDown,
   GraduationCap,
   LayoutDashboard,
@@ -26,9 +27,23 @@ import Link from "next/link";
 
 const navItems = [
   { label: "Overview", icon: LayoutDashboard, active: true, href: "/" },
-  { label: "Students", icon: Users },
+  {
+    label: "Students",
+    icon: Users,
+    roles: ["SUPER_ADMIN", "TEACHER"] as User["role"][],
+  },
   { label: "Courses", icon: BookOpen, href: "/courses" },
-  { label: "Calendar", icon: CalendarDays },
+  {
+    label: "Calendar",
+    icon: CalendarDays,
+    roles: ["TEACHER", "STUDENT"] as User["role"][],
+  },
+  {
+    label: "Payments",
+    icon: CreditCard,
+    href: "/payments",
+    roles: ["STUDENT"] as User["role"][],
+  },
 ];
 
 const activity = [
@@ -108,7 +123,9 @@ export default function Home() {
         </div>
         <div className="workspace-label">Workspace</div>
         <nav className="main-nav" aria-label="Main navigation">
-          {navItems.map(({ label, icon: Icon, active, href }) =>
+          {navItems
+            .filter(({ roles }) => !roles || roles.includes(currentUser.role))
+            .map(({ label, icon: Icon, active, href }) =>
             href ? (
               <Link
                 className={`nav-item ${active ? "active" : ""}`}
@@ -130,23 +147,31 @@ export default function Home() {
                 )}
               </button>
             ),
-          )}
+            )}
         </nav>
         <div className="workspace-label secondary-label">Manage</div>
         <nav className="main-nav">
-          <Link className="nav-item" href="/academic-periods">
-            <ShieldCheck size={19} />
-            <span>Academic periods</span>
-            <span className="nav-dot" />
-          </Link>
-          <Link className="nav-item" href="/departments">
-            <Settings size={19} />
-            <span>Departments</span>
-          </Link>
-          <Link className="nav-item" href="/curriculum-courses">
-            <BookOpen size={19} />
-            <span>Curriculum</span>
-          </Link>
+          {(["SUPER_ADMIN", "TEACHER"] as User["role"][]).includes(
+            currentUser.role,
+          ) && (
+            <Link className="nav-item" href="/curriculum-courses">
+              <BookOpen size={19} />
+              <span>Curriculum</span>
+            </Link>
+          )}
+          {currentUser.role === "SUPER_ADMIN" && (
+            <>
+              <Link className="nav-item" href="/academic-periods">
+                <ShieldCheck size={19} />
+                <span>Academic periods</span>
+                <span className="nav-dot" />
+              </Link>
+              <Link className="nav-item" href="/departments">
+                <Settings size={19} />
+                <span>Departments</span>
+              </Link>
+            </>
+          )}
           <button className="nav-item">
             <Settings size={19} />
             <span>Settings</span>
