@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "./auth-provider";
+import { GuideDialog } from "./_components/guide-dialog";
 import type { User } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -182,9 +183,7 @@ export default function Home() {
             <Sparkles size={19} />
             <strong>Need a hand?</strong>
             <p>Explore the admin guide to get started.</p>
-            <button>
-              View guide <ArrowUpRight size={14} />
-            </button>
+            <GuideDialog />
           </div>
           <button
             className="profile-chip"

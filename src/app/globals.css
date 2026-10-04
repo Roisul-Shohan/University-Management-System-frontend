@@ -150,6 +150,48 @@ button {
   gap: 4px;
   padding: 0;
 }
+.help-link {
+  color: #aaa1ff;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  padding: 0;
+}
+.dialog-overlay {
+  background: #11132999;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+}
+.dialog-content {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 24px 80px #17182d33;
+  left: 50%;
+  max-width: min(90vw, 430px);
+  padding: 28px;
+  position: fixed;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  z-index: 51;
+}
+.dialog-close {
+  background: #f7f7fb;
+  border-radius: 50%;
+  color: var(--muted);
+  display: grid;
+  padding: 7px;
+  place-items: center;
+  position: absolute;
+  right: 16px;
+  top: 16px;
+}
+.dialog-title { color: var(--ink); font-size: 20px; margin: 0 35px 10px 0; }
+.dialog-description { color: var(--muted); font-size: 13px; line-height: 1.65; margin: 0 0 22px; }
 .profile-chip {
   display: flex;
   align-items: center;
@@ -651,7 +693,9 @@ button {
   box-shadow: none;
 }
 @keyframes route-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 .loading-mark {
   width: 44px;
@@ -918,7 +962,7 @@ button {
   color: var(--muted);
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: .08em;
+  letter-spacing: 0.08em;
   margin: 0 0 10px;
   text-transform: uppercase;
 }
@@ -941,16 +985,24 @@ button {
 }
 .demo-login-button:disabled {
   cursor: wait;
-  opacity: .6;
+  opacity: 0.6;
 }
 .demo-login-button strong,
 .demo-login-button span {
   display: block;
 }
-.demo-login-button strong { font-size: 11px; }
-.demo-login-button span { color: var(--muted); font-size: 9px; margin-top: 3px; }
+.demo-login-button strong {
+  font-size: 11px;
+}
+.demo-login-button span {
+  color: var(--muted);
+  font-size: 9px;
+  margin-top: 3px;
+}
 @media (max-width: 480px) {
-  .demo-login-grid { grid-template-columns: 1fr; }
+  .demo-login-grid {
+    grid-template-columns: 1fr;
+  }
 }
 .auth-footnote span {
   color: #7064e5;
