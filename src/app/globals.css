@@ -190,8 +190,17 @@ button {
   right: 16px;
   top: 16px;
 }
-.dialog-title { color: var(--ink); font-size: 20px; margin: 0 35px 10px 0; }
-.dialog-description { color: var(--muted); font-size: 13px; line-height: 1.65; margin: 0 0 22px; }
+.dialog-title {
+  color: var(--ink);
+  font-size: 20px;
+  margin: 0 35px 10px 0;
+}
+.dialog-description {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.65;
+  margin: 0 0 22px;
+}
 .profile-chip {
   display: flex;
   align-items: center;
@@ -275,6 +284,23 @@ button {
   border-radius: 50%;
   top: -1px;
   right: -1px;
+}
+.notification-count {
+  align-items: center;
+  background: #f07284;
+  border: 2px solid white;
+  border-radius: 999px;
+  color: white;
+  display: flex;
+  font-size: 8px;
+  font-weight: 800;
+  height: 17px;
+  justify-content: center;
+  min-width: 17px;
+  padding: 0 3px;
+  position: absolute;
+  right: -9px;
+  top: -9px;
 }
 .top-avatar {
   width: 33px;

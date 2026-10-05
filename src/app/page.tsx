@@ -20,11 +20,13 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "./auth-provider";
 import { GuideDialog } from "./_components/guide-dialog";
 import type { User } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { notificationsApi } from "@/lib/notifications-api";
 
 const navItems = [
   { label: "Overview", icon: LayoutDashboard, active: true, href: "/" },
@@ -72,6 +74,13 @@ const activity = [
 export default function Home() {
   const router = useRouter();
   const { user: currentUser, loading: checkingSession, logout } = useAuth();
+  const unreadNotifications = useQuery({
+    queryKey: ["notifications", "unread-count"],
+    queryFn: notificationsApi.unreadCount,
+    enabled: !!currentUser,
+    refetchInterval: 60_000,
+    retry: false,
+  });
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -232,13 +241,18 @@ export default function Home() {
             <button className="icon-button search-button" aria-label="Search">
               <Search size={19} />
             </button>
-            <button
+            <Link
+              href="/notifications"
               className="icon-button notification-button"
               aria-label="Notifications"
             >
               <Bell size={19} />
-              <i />
-            </button>
+              {(unreadNotifications.data?.count ?? 0) > 0 && (
+                <span className="notification-count">
+                  {unreadNotifications.data?.count}
+                </span>
+              )}
+            </Link>
             <div className="top-avatar">{getInitials(currentUser.name)}</div>
           </div>
         </header>
