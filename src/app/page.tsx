@@ -5,6 +5,7 @@ import {
   Bell,
   BookOpen,
   CalendarDays,
+  ClipboardCheck,
   CreditCard,
   FileText,
   ChevronDown,
@@ -55,6 +56,12 @@ const navItems = [
     roles: ["STUDENT"] as User["role"][],
   },
   { label: "Notifications", icon: Bell, href: "/notifications" },
+  {
+    label: "Admission review",
+    icon: ClipboardCheck,
+    href: "/admission-review",
+    roles: ["SUPER_ADMIN", "TEACHER"] as User["role"][],
+  },
 ];
 
 const activity = [

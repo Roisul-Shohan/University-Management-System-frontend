@@ -32,6 +32,19 @@ export type CreateAdmissionInput = {
   admissionYear: number;
 };
 
+export type ReviewAdmission = {
+  id: string;
+  admissionYear: number;
+  admissionFee: string | number;
+  status: AdmissionStatus;
+  createdAt: string;
+  user: { name: string; email: string; status: string };
+  program: {
+    degreeType: string;
+    department: { name: string };
+  };
+};
+
 export const admissionsApi = {
   mine: () => apiRequest<StudentAdmission[]>("/admissions/my"),
   create: (input: CreateAdmissionInput) =>
@@ -39,4 +52,14 @@ export const admissionsApi = {
       method: "POST",
       body: JSON.stringify(input),
     }),
+  reviewList: (params: { status?: AdmissionStatus; admissionYear?: number } = {}) => {
+    const query = new URLSearchParams();
+    if (params.status) query.set("status", params.status);
+    if (params.admissionYear) query.set("admissionYear", String(params.admissionYear));
+    return apiRequest<ReviewAdmission[]>(`/admissions${query.size ? `?${query}` : ""}`);
+  },
+  approve: (id: string) =>
+    apiRequest<ReviewAdmission>(`/admissions/${id}/approve`, { method: "PATCH" }),
+  reject: (id: string) =>
+    apiRequest<ReviewAdmission>(`/admissions/${id}/reject`, { method: "PATCH" }),
 };
