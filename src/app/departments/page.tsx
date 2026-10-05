@@ -13,13 +13,8 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
-import {
-  departmentsApi,
-  type Department,
-  authApi,
-  type User,
-} from "@/lib/api";
+import { useAuthGuard } from "../auth-provider";
+import { departmentsApi, type Department } from "@/lib/api";
 
 const departmentSchema = z.object({
   name: z
@@ -38,8 +33,7 @@ const departmentSchema = z.object({
 type DepartmentValues = z.input<typeof departmentSchema>;
 
 export default function DepartmentsPage() {
-  const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const { user, loading: checkingAccess } = useAuthGuard(["SUPER_ADMIN"]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -66,18 +60,10 @@ export default function DepartmentsPage() {
   }
 
   useEffect(() => {
-    authApi
-      .me()
-      .then((currentUser) => {
-        if (currentUser.role !== "SUPER_ADMIN") {
-          router.replace("/");
-          return;
-        }
-        setUser(currentUser);
-        void loadDepartments();
-      })
-      .catch(() => router.replace("/login"));
-  }, [router]);
+    if (!user) return;
+    const timer = window.setTimeout(() => void loadDepartments(), 0);
+    return () => window.clearTimeout(timer);
+  }, [user]);
 
   async function deleteDepartment(department: Department) {
     if (
@@ -102,7 +88,7 @@ export default function DepartmentsPage() {
     }
   }
 
-  if (!user)
+  if (checkingAccess || !user)
     return (
       <main className="loading-screen">
         <div className="loading-mark">
@@ -268,7 +254,9 @@ function DepartmentModal({
               {...register("name")}
               placeholder="Computer Science and Engineering"
             />
-            {errors.name && <span className="field-error">{errors.name.message}</span>}
+            {errors.name && (
+              <span className="field-error">{errors.name.message}</span>
+            )}
           </label>
           <label>
             Department code
@@ -277,7 +265,9 @@ function DepartmentModal({
               style={{ textTransform: "uppercase" }}
               placeholder="CSE"
             />
-            {errors.code && <span className="field-error">{errors.code.message}</span>}
+            {errors.code && (
+              <span className="field-error">{errors.code.message}</span>
+            )}
           </label>
           {error && <p className="form-error">{error}</p>}
           <div className="modal-actions">
@@ -288,7 +278,11 @@ function DepartmentModal({
             >
               Cancel
             </button>
-            <button type="submit" className="primary-button" disabled={isSubmitting}>
+            <button
+              type="submit"
+              className="primary-button"
+              disabled={isSubmitting}
+            >
               {isSubmitting
                 ? "Saving..."
                 : mode === "create"

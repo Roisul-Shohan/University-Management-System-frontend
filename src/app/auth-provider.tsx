@@ -1,11 +1,15 @@
 "use client";
 
 import { authApi, type User } from "@/lib/api";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import {
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
-import { createContext, useCallback, useContext, useMemo } from "react";
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+} from "react";
 
 type AuthContextValue = {
   user: User | null;
@@ -30,12 +34,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     retry: false,
   });
 
-  const refreshUser = useCallback(
-    async () => {
-      await queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
-    },
-    [queryClient],
-  );
+  const refreshUser = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
+  }, [queryClient]);
 
   const logout = useCallback(async () => {
     await authApi.logout();
@@ -61,4 +62,25 @@ export function useAuth() {
     throw new Error("useAuth must be used inside AuthProvider");
   }
   return context;
+}
+
+export function useAuthGuard(roles?: User["role"][]) {
+  const router = useRouter();
+  const auth = useAuth();
+  const authorized =
+    !!auth.user && (!roles || roles.includes(auth.user.role));
+
+  useEffect(() => {
+    if (auth.loading) return;
+    if (!auth.user) {
+      router.replace("/login");
+    } else if (!authorized) {
+      router.replace("/");
+    }
+  }, [auth.loading, auth.user, authorized, router]);
+
+  return {
+    user: authorized ? auth.user : null,
+    loading: auth.loading || (!!auth.user && !authorized),
+  };
 }

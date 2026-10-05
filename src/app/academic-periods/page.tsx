@@ -16,14 +16,12 @@ import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
+import { useAuthGuard } from "../auth-provider";
 import {
   academicPeriodsApi,
   academicPeriodTypes,
   type AcademicPeriod,
   type AcademicPeriodType,
-  authApi,
-  type User,
 } from "@/lib/api";
 
 const labels: Record<AcademicPeriodType, string> = {
@@ -56,8 +54,7 @@ const academicPeriodSchema = z
 type AcademicPeriodValues = z.infer<typeof academicPeriodSchema>;
 
 export default function AcademicPeriodsPage() {
-  const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const { user, loading: checkingAccess } = useAuthGuard(["SUPER_ADMIN"]);
   const [periods, setPeriods] = useState<AcademicPeriod[]>([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -91,19 +88,6 @@ export default function AcademicPeriodsPage() {
   }, [activeFilter, page, type]);
 
   useEffect(() => {
-    authApi
-      .me()
-      .then((currentUser) => {
-        if (currentUser.role !== "SUPER_ADMIN") {
-          router.replace("/");
-          return;
-        }
-        setUser(currentUser);
-      })
-      .catch(() => router.replace("/login"));
-  }, [router]);
-
-  useEffect(() => {
     if (!user) return;
     const timer = window.setTimeout(() => void loadPeriods(), 0);
     return () => window.clearTimeout(timer);
@@ -126,7 +110,7 @@ export default function AcademicPeriodsPage() {
     }
   }
 
-  if (!user)
+  if (checkingAccess || !user)
     return (
       <main className="loading-screen">
         <div className="loading-mark">
@@ -344,18 +328,24 @@ function CreatePeriodModal({
                 </option>
               ))}
             </select>
-            {errors.type && <span className="field-error">{errors.type.message}</span>}
+            {errors.type && (
+              <span className="field-error">{errors.type.message}</span>
+            )}
           </label>
           <div className="date-fields">
             <label>
               Starts
               <input type="date" {...register("startDate")} />
-              {errors.startDate && <span className="field-error">{errors.startDate.message}</span>}
+              {errors.startDate && (
+                <span className="field-error">{errors.startDate.message}</span>
+              )}
             </label>
             <label>
               Ends
               <input type="date" {...register("endDate")} />
-              {errors.endDate && <span className="field-error">{errors.endDate.message}</span>}
+              {errors.endDate && (
+                <span className="field-error">{errors.endDate.message}</span>
+              )}
             </label>
           </div>
           {error && <p className="form-error">{error}</p>}
@@ -367,7 +357,11 @@ function CreatePeriodModal({
             >
               Cancel
             </button>
-            <button type="submit" className="primary-button" disabled={isSubmitting}>
+            <button
+              type="submit"
+              className="primary-button"
+              disabled={isSubmitting}
+            >
               {isSubmitting ? "Creating..." : "Create period"}
             </button>
           </div>
