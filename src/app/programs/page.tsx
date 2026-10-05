@@ -13,16 +13,14 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
+import { useAuthGuard } from "../auth-provider";
 import {
-  authApi,
   departmentsApi,
   degreeTypes,
   programsApi,
   type DegreeType,
   type Department,
   type Program,
-  type User,
 } from "@/lib/api";
 import styles from "./programs.module.css";
 
@@ -40,8 +38,10 @@ const programSchema = z.object({
 type ProgramFormValues = z.infer<typeof programSchema>;
 
 export default function ProgramsPage() {
-  const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const { user, loading: checkingAccess } = useAuthGuard([
+    "SUPER_ADMIN",
+    "TEACHER",
+  ]);
   const [programs, setPrograms] = useState<Program[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [departmentId, setDepartmentId] = useState("");
@@ -67,20 +67,22 @@ export default function ProgramsPage() {
   }
 
   useEffect(() => {
-    authApi
-      .me()
-      .then(async (currentUser) => {
-        setUser(currentUser);
-        const [programResult, departmentResult] = await Promise.all([
-          programsApi.list(),
-          departmentsApi.list(),
-        ]);
+    if (!user) return;
+    Promise.all([programsApi.list(), departmentsApi.list()])
+      .then(([programResult, departmentResult]) => {
         setPrograms(programResult);
         setDepartments(departmentResult);
         setLoading(false);
       })
-      .catch(() => router.replace("/login"));
-  }, [router]);
+      .catch((requestError) => {
+        setError(
+          requestError instanceof Error
+            ? requestError.message
+            : "Unable to load programs.",
+        );
+        setLoading(false);
+      });
+  }, [user]);
 
   async function deleteProgram(program: Program) {
     if (
@@ -100,7 +102,7 @@ export default function ProgramsPage() {
     }
   }
 
-  if (!user || (loading && programs.length === 0))
+  if (checkingAccess || !user || (loading && programs.length === 0))
     return (
       <main className="loading-screen">
         <div className="loading-mark">
@@ -240,8 +242,7 @@ function ProgramModal({
   async function submit(values: ProgramFormValues) {
     setError("");
     try {
-      if (mode === "create")
-        await programsApi.create(values);
+      if (mode === "create") await programsApi.create(values);
       else if (program)
         await programsApi.update(program.id, { degreeType: values.degreeType });
       onSaved();
@@ -269,9 +270,7 @@ function ProgramModal({
           {mode === "create" && (
             <label>
               Department
-              <select
-                {...register("departmentId")}
-              >
+              <select {...register("departmentId")}>
                 <option value="">Choose a department</option>
                 {departments.map((department) => (
                   <option key={department.id} value={department.id}>
@@ -280,7 +279,9 @@ function ProgramModal({
                 ))}
               </select>
               {errors.departmentId && (
-                <span className="field-error">{errors.departmentId.message}</span>
+                <span className="field-error">
+                  {errors.departmentId.message}
+                </span>
               )}
             </label>
           )}
@@ -306,7 +307,11 @@ function ProgramModal({
             >
               Cancel
             </button>
-            <button type="submit" className="primary-button" disabled={isSubmitting}>
+            <button
+              type="submit"
+              className="primary-button"
+              disabled={isSubmitting}
+            >
               {isSubmitting
                 ? "Saving..."
                 : mode === "create"

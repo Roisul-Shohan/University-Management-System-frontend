@@ -5,14 +5,12 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
+import { useAuthGuard } from "../auth-provider";
 import {
-  authApi,
   coursesApi,
   departmentsApi,
   type Course,
   type Department,
-  type User,
 } from "@/lib/api";
 import styles from "./courses.module.css";
 
@@ -28,8 +26,11 @@ const courseSchema = z.object({
 type CourseValues = z.infer<typeof courseSchema>;
 
 export default function CoursesPage() {
-  const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const { user, loading: checkingAccess } = useAuthGuard([
+    "SUPER_ADMIN",
+    "TEACHER",
+    "STUDENT",
+  ]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [departmentId, setDepartmentId] = useState("");
@@ -55,20 +56,22 @@ export default function CoursesPage() {
   }
 
   useEffect(() => {
-    authApi
-      .me()
-      .then(async (currentUser) => {
-        setUser(currentUser);
-        const [courseResult, departmentResult] = await Promise.all([
-          coursesApi.list(),
-          departmentsApi.list(),
-        ]);
+    if (!user) return;
+    Promise.all([coursesApi.list(), departmentsApi.list()])
+      .then(([courseResult, departmentResult]) => {
         setCourses(courseResult);
         setDepartments(departmentResult);
         setLoading(false);
       })
-      .catch(() => router.replace("/login"));
-  }, [router]);
+      .catch((requestError) => {
+        setError(
+          requestError instanceof Error
+            ? requestError.message
+            : "Unable to load courses.",
+        );
+        setLoading(false);
+      });
+  }, [user]);
 
   async function deleteCourse(course: Course) {
     if (!window.confirm(`Delete ${course.code} · ${course.name}?`)) return;
@@ -85,7 +88,7 @@ export default function CoursesPage() {
     }
   }
 
-  if (!user || (loading && courses.length === 0))
+  if (checkingAccess || !user || (loading && courses.length === 0))
     return (
       <main className="loading-screen">
         <div className="loading-mark">
@@ -274,18 +277,27 @@ function CourseModal({
                 })}
                 placeholder="CSE 201"
               />
-              {errors.code && <span className="field-error">{errors.code.message}</span>}
+              {errors.code && (
+                <span className="field-error">{errors.code.message}</span>
+              )}
             </label>
             <label>
               Credits
               <input type="number" step="0.5" {...register("credits")} />
-              {errors.credits && <span className="field-error">{errors.credits.message}</span>}
+              {errors.credits && (
+                <span className="field-error">{errors.credits.message}</span>
+              )}
             </label>
           </div>
           <label>
             Course name
-            <input {...register("name")} placeholder="Data Structures and Algorithms" />
-            {errors.name && <span className="field-error">{errors.name.message}</span>}
+            <input
+              {...register("name")}
+              placeholder="Data Structures and Algorithms"
+            />
+            {errors.name && (
+              <span className="field-error">{errors.name.message}</span>
+            )}
           </label>
           {mode === "create" && (
             <label>
@@ -298,7 +310,11 @@ function CourseModal({
                   </option>
                 ))}
               </select>
-              {errors.departmentId && <span className="field-error">{errors.departmentId.message}</span>}
+              {errors.departmentId && (
+                <span className="field-error">
+                  {errors.departmentId.message}
+                </span>
+              )}
             </label>
           )}
           {error && <p className="form-error">{error}</p>}
@@ -310,7 +326,11 @@ function CourseModal({
             >
               Cancel
             </button>
-            <button type="submit" className="primary-button" disabled={isSubmitting}>
+            <button
+              type="submit"
+              className="primary-button"
+              disabled={isSubmitting}
+            >
               {isSubmitting
                 ? "Saving..."
                 : mode === "create"

@@ -13,31 +13,41 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
+import { useAuthGuard } from "../auth-provider";
 import {
-  authApi,
   coursesApi,
   curriculumCoursesApi,
   programsApi,
   type Course,
   type CurriculumCourse,
   type Program,
-  type User,
 } from "@/lib/api";
 import styles from "./curriculum.module.css";
 
 const curriculumSchema = z.object({
   programId: z.string().min(1, "Choose a program."),
   courseId: z.string().min(1, "Choose a course."),
-  year: z.string().refine((value) => Number.isInteger(Number(value)) && Number(value) >= 1, "Year must be at least 1."),
-  semester: z.string().refine((value) => Number.isInteger(Number(value)) && Number(value) >= 1, "Semester must be at least 1."),
+  year: z
+    .string()
+    .refine(
+      (value) => Number.isInteger(Number(value)) && Number(value) >= 1,
+      "Year must be at least 1.",
+    ),
+  semester: z
+    .string()
+    .refine(
+      (value) => Number.isInteger(Number(value)) && Number(value) >= 1,
+      "Semester must be at least 1.",
+    ),
 });
 
 type CurriculumValues = z.infer<typeof curriculumSchema>;
 
 export default function CurriculumCoursesPage() {
-  const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const { user, loading: checkingAccess } = useAuthGuard([
+    "SUPER_ADMIN",
+    "TEACHER",
+  ]);
   const [items, setItems] = useState<CurriculumCourse[]>([]);
   const [programs, setPrograms] = useState<Program[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,20 +77,22 @@ export default function CurriculumCoursesPage() {
   }
 
   useEffect(() => {
-    authApi
-      .me()
-      .then(async (currentUser) => {
-        setUser(currentUser);
-        const [curriculumResult, programResult] = await Promise.all([
-          curriculumCoursesApi.list(),
-          programsApi.list(),
-        ]);
+    if (!user) return;
+    Promise.all([curriculumCoursesApi.list(), programsApi.list()])
+      .then(([curriculumResult, programResult]) => {
         setItems(curriculumResult);
         setPrograms(programResult);
         setLoading(false);
       })
-      .catch(() => router.replace("/login"));
-  }, [router]);
+      .catch((requestError) => {
+        setError(
+          requestError instanceof Error
+            ? requestError.message
+            : "Unable to load curriculum courses.",
+        );
+        setLoading(false);
+      });
+  }, [user]);
 
   async function applyFilters(
     nextProgram = programId,
@@ -113,7 +125,7 @@ export default function CurriculumCoursesPage() {
     }
   }
 
-  if (!user || (loading && items.length === 0))
+  if (checkingAccess || !user || (loading && items.length === 0))
     return (
       <main className="loading-screen">
         <div className="loading-mark">
@@ -348,7 +360,9 @@ function CurriculumModal({
                 </option>
               ))}
             </select>
-            {errors.programId && <span className="field-error">{errors.programId.message}</span>}
+            {errors.programId && (
+              <span className="field-error">{errors.programId.message}</span>
+            )}
           </label>
           <label>
             Course
@@ -360,7 +374,9 @@ function CurriculumModal({
                 </option>
               ))}
             </select>
-            {errors.courseId && <span className="field-error">{errors.courseId.message}</span>}
+            {errors.courseId && (
+              <span className="field-error">{errors.courseId.message}</span>
+            )}
           </label>
           <div className={styles.formGrid}>
             <label>
@@ -371,7 +387,9 @@ function CurriculumModal({
                 <option value="3">Year 3</option>
                 <option value="4">Year 4</option>
               </select>
-              {errors.year && <span className="field-error">{errors.year.message}</span>}
+              {errors.year && (
+                <span className="field-error">{errors.year.message}</span>
+              )}
             </label>
             <label>
               Semester
@@ -379,7 +397,9 @@ function CurriculumModal({
                 <option value="1">Semester 1</option>
                 <option value="2">Semester 2</option>
               </select>
-              {errors.semester && <span className="field-error">{errors.semester.message}</span>}
+              {errors.semester && (
+                <span className="field-error">{errors.semester.message}</span>
+              )}
             </label>
           </div>
           {error && <p className="form-error">{error}</p>}
@@ -391,7 +411,11 @@ function CurriculumModal({
             >
               Cancel
             </button>
-            <button type="submit" className="primary-button" disabled={isSubmitting}>
+            <button
+              type="submit"
+              className="primary-button"
+              disabled={isSubmitting}
+            >
               {isSubmitting
                 ? "Saving..."
                 : mode === "create"

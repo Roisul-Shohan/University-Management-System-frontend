@@ -13,8 +13,8 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
-import { authApi, coursesApi, type Course, type User } from "@/lib/api";
+import { useAuthGuard } from "../auth-provider";
+import { coursesApi, type Course } from "@/lib/api";
 import {
   courseOfferingsApi,
   teachersApi,
@@ -26,16 +26,31 @@ import styles from "./offerings.module.css";
 const offeringSchema = z.object({
   courseId: z.string().min(1, "Choose a course."),
   teacherId: z.string().min(1, "Choose an instructor."),
-  year: z.string().refine((value) => Number.isInteger(Number(value)) && Number(value) >= 1, "Year must be at least 1."),
-  semester: z.string().refine((value) => Number.isInteger(Number(value)) && Number(value) >= 1, "Semester must be at least 1."),
-  capacity: z.string().refine((value) => value === "" || (Number.isInteger(Number(value)) && Number(value) > 0), "Capacity must be a positive whole number."),
+  year: z
+    .string()
+    .refine(
+      (value) => Number.isInteger(Number(value)) && Number(value) >= 1,
+      "Year must be at least 1.",
+    ),
+  semester: z
+    .string()
+    .refine(
+      (value) => Number.isInteger(Number(value)) && Number(value) >= 1,
+      "Semester must be at least 1.",
+    ),
+  capacity: z
+    .string()
+    .refine(
+      (value) =>
+        value === "" || (Number.isInteger(Number(value)) && Number(value) > 0),
+      "Capacity must be a positive whole number.",
+    ),
 });
 
 type OfferingValues = z.infer<typeof offeringSchema>;
 
 export default function CourseOfferingsPage() {
-  const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const { user, loading: checkingAccess } = useAuthGuard(["SUPER_ADMIN"]);
   const [offerings, setOfferings] = useState<CourseOffering[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -65,19 +80,22 @@ export default function CourseOfferingsPage() {
   }
 
   useEffect(() => {
-    authApi
-      .me()
-      .then(async (currentUser) => {
-        if (currentUser.role !== "SUPER_ADMIN") {
-          router.replace("/");
-          return;
-        }
-        setUser(currentUser);
-        setOfferings(await courseOfferingsApi.list());
+    if (!user) return;
+    courseOfferingsApi
+      .list()
+      .then((result) => {
+        setOfferings(result);
         setLoading(false);
       })
-      .catch(() => router.replace("/login"));
-  }, [router]);
+      .catch((requestError) => {
+        setError(
+          requestError instanceof Error
+            ? requestError.message
+            : "Unable to load course offerings.",
+        );
+        setLoading(false);
+      });
+  }, [user]);
 
   async function deleteOffering(offering: CourseOffering) {
     if (!window.confirm(`Delete the ${offering.course.code} offering?`)) return;
@@ -93,7 +111,7 @@ export default function CourseOfferingsPage() {
     }
   }
 
-  if (!user || (loading && offerings.length === 0))
+  if (checkingAccess || !user || (loading && offerings.length === 0))
     return (
       <main className="loading-screen">
         <div className="loading-mark">
@@ -326,7 +344,9 @@ function OfferingModal({
                   </option>
                 ))}
               </select>
-              {errors.courseId && <span className="field-error">{errors.courseId.message}</span>}
+              {errors.courseId && (
+                <span className="field-error">{errors.courseId.message}</span>
+              )}
             </label>
           )}
           <label>
@@ -339,7 +359,9 @@ function OfferingModal({
                 </option>
               ))}
             </select>
-            {errors.teacherId && <span className="field-error">{errors.teacherId.message}</span>}
+            {errors.teacherId && (
+              <span className="field-error">{errors.teacherId.message}</span>
+            )}
           </label>
           <div className={styles.formGrid}>
             <label>
@@ -350,7 +372,9 @@ function OfferingModal({
                 <option value="3">Year 3</option>
                 <option value="4">Year 4</option>
               </select>
-              {errors.year && <span className="field-error">{errors.year.message}</span>}
+              {errors.year && (
+                <span className="field-error">{errors.year.message}</span>
+              )}
             </label>
             <label>
               Semester
@@ -358,13 +382,23 @@ function OfferingModal({
                 <option value="1">Semester 1</option>
                 <option value="2">Semester 2</option>
               </select>
-              {errors.semester && <span className="field-error">{errors.semester.message}</span>}
+              {errors.semester && (
+                <span className="field-error">{errors.semester.message}</span>
+              )}
             </label>
           </div>
           <label>
             Capacity
-            <input type="number" min="1" step="1" {...register("capacity")} placeholder="Unlimited" />
-            {errors.capacity && <span className="field-error">{errors.capacity.message}</span>}
+            <input
+              type="number"
+              min="1"
+              step="1"
+              {...register("capacity")}
+              placeholder="Unlimited"
+            />
+            {errors.capacity && (
+              <span className="field-error">{errors.capacity.message}</span>
+            )}
           </label>
           {error && <p className="form-error">{error}</p>}
           <div className="modal-actions">
@@ -375,7 +409,11 @@ function OfferingModal({
             >
               Cancel
             </button>
-            <button type="submit" className="primary-button" disabled={isSubmitting}>
+            <button
+              type="submit"
+              className="primary-button"
+              disabled={isSubmitting}
+            >
               {isSubmitting
                 ? "Saving..."
                 : mode === "create"
