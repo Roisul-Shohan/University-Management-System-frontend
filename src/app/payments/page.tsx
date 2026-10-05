@@ -7,9 +7,14 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { admissionsApi, paymentsApi, type Admission } from "@/lib/payments-api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuthGuard } from "../auth-provider";
+import {
+  admissionsApi,
+  paymentsApi,
+  type Admission,
+  type PaymentTransaction,
+} from "@/lib/payments-api";
 import styles from "./payments.module.css";
 
 const payableStatuses = new Set(["APPROVED"]);
@@ -23,7 +28,7 @@ function formatAmount(amount: string | number) {
 }
 
 export default function PaymentsPage() {
-  const router = useRouter();
+  const { user, loading: checkingAccess } = useAuthGuard(["STUDENT"]);
   const admissionsQuery = useQuery({
     queryKey: ["admissions", "mine"],
     queryFn: admissionsApi.mine,
@@ -34,18 +39,17 @@ export default function PaymentsPage() {
     onSuccess: (payment) => window.location.assign(payment.bkash.bkashURL),
   });
   const admissions = admissionsQuery.data ?? [];
-  const loading = admissionsQuery.isPending;
+  const loading = checkingAccess || admissionsQuery.isPending;
   const requestError = admissionsQuery.error ?? paymentMutation.error;
   const error = requestError instanceof Error ? requestError.message : "";
 
-  useEffect(() => {
-    if (
-      admissionsQuery.error instanceof Error &&
-      admissionsQuery.error.message.toLowerCase().includes("unauthorized")
-    ) {
-      router.replace("/login");
-    }
-  }, [admissionsQuery.error, router]);
+  if (checkingAccess || !user) {
+    return (
+      <main className={styles.loading} aria-live="polite">
+        Checking student access...
+      </main>
+    );
+  }
 
   return (
     <main className={styles.page}>
@@ -104,6 +108,8 @@ export default function PaymentsPage() {
           const paid =
             admission.status === "CONFIRMED" ||
             transaction?.status === "SUCCESS";
+          const pending =
+            transaction?.status === "PENDING" && !!transaction.bkashPaymentId;
           return (
             <article className={styles.card} key={admission.id}>
               <div className={styles.cardTop}>
@@ -126,6 +132,8 @@ export default function PaymentsPage() {
               </div>
               {paid ? (
                 <div className={styles.paid}>Payment completed</div>
+              ) : pending && transaction ? (
+                <PaymentStatus transaction={transaction} />
               ) : canPay ? (
                 <button
                   className={styles.payButton}
@@ -148,4 +156,36 @@ export default function PaymentsPage() {
       </div>
     </main>
   );
+}
+
+function PaymentStatus({ transaction }: { transaction: PaymentTransaction }) {
+  const queryClient = useQueryClient();
+  const statusQuery = useQuery({
+    queryKey: ["payments", "status", transaction.id],
+    queryFn: () => paymentsApi.status(transaction.id),
+    enabled: transaction.status === "PENDING" && !!transaction.bkashPaymentId,
+    refetchInterval: (query) =>
+      query.state.data?.transaction.status === "PENDING" ? 10_000 : false,
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (statusQuery.data?.transaction.status === "SUCCESS") {
+      void queryClient.invalidateQueries({ queryKey: ["admissions", "mine"] });
+    }
+  }, [queryClient, statusQuery.data?.transaction.status]);
+
+  if (statusQuery.isError) {
+    return <div className={styles.waiting}>Unable to verify payment status. Please refresh.</div>;
+  }
+
+  if (statusQuery.isPending || statusQuery.data?.transaction.status === "PENDING") {
+    return <div className={styles.waiting}>Checking bKash payment status…</div>;
+  }
+
+  if (statusQuery.data?.transaction.status === "SUCCESS") {
+    return <div className={styles.paid}>Payment completed and verified</div>;
+  }
+
+  return <div className={styles.waiting}>Payment status: {statusQuery.data?.transaction.status ?? "Unknown"}</div>;
 }
