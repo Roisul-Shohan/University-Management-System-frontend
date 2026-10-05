@@ -52,6 +52,7 @@ export const authApi = {
     }
     if (typeof document !== "undefined") {
       document.cookie = "northstar-session=active; Path=/; SameSite=Lax";
+      document.cookie = `northstar-role=${result.user.role}; Path=/; SameSite=Lax`;
     }
     return result;
   },
@@ -64,6 +65,7 @@ export const authApi = {
         window.localStorage.removeItem("accessToken");
       if (typeof document !== "undefined") {
         document.cookie = "northstar-session=; Path=/; Max-Age=0; SameSite=Lax";
+        document.cookie = "northstar-role=; Path=/; Max-Age=0; SameSite=Lax";
       }
     }
   },
@@ -263,4 +265,3 @@ export type User = {
   role: "STUDENT" | "TEACHER" | "SUPER_ADMIN";
   status?: string;
 };
-
