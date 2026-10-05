@@ -45,6 +45,7 @@ const navItems = [
     href: "/payments",
     roles: ["STUDENT"] as User["role"][],
   },
+  { label: "Notifications", icon: Bell, href: "/notifications" },
 ];
 
 const activity = [
@@ -127,27 +128,27 @@ export default function Home() {
           {navItems
             .filter(({ roles }) => !roles || roles.includes(currentUser.role))
             .map(({ label, icon: Icon, active, href }) =>
-            href ? (
-              <Link
-                className={`nav-item ${active ? "active" : ""}`}
-                href={href}
-                key={label}
-              >
-                <Icon size={19} strokeWidth={active ? 2.4 : 2} />
-                <span>{label}</span>
-              </Link>
-            ) : (
-              <button
-                className={`nav-item ${active ? "active" : ""}`}
-                key={label}
-              >
-                <Icon size={19} strokeWidth={active ? 2.4 : 2} />
-                <span>{label}</span>
-                {label === "Students" && (
-                  <span className="nav-count">1,248</span>
-                )}
-              </button>
-            ),
+              href ? (
+                <Link
+                  className={`nav-item ${active ? "active" : ""}`}
+                  href={href}
+                  key={label}
+                >
+                  <Icon size={19} strokeWidth={active ? 2.4 : 2} />
+                  <span>{label}</span>
+                </Link>
+              ) : (
+                <button
+                  className={`nav-item ${active ? "active" : ""}`}
+                  key={label}
+                >
+                  <Icon size={19} strokeWidth={active ? 2.4 : 2} />
+                  <span>{label}</span>
+                  {label === "Students" && (
+                    <span className="nav-count">1,248</span>
+                  )}
+                </button>
+              ),
             )}
         </nav>
         <div className="workspace-label secondary-label">Manage</div>
