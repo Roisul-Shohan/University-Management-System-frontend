@@ -76,6 +76,12 @@ const navItems = [
     href: "/exams",
     roles: ["STUDENT"] as User["role"][],
   },
+  {
+    label: "Exam attempts",
+    icon: ClipboardList,
+    href: "/exam-attempts",
+    roles: ["STUDENT"] as User["role"][],
+  },
   { label: "Notifications", icon: Bell, href: "/notifications" },
   {
     label: "Admission review",
@@ -87,6 +93,12 @@ const navItems = [
     label: "Exam management",
     icon: ClipboardCheck,
     href: "/exam-management",
+    roles: ["SUPER_ADMIN", "TEACHER"] as User["role"][],
+  },
+  {
+    label: "Teachers",
+    icon: Users,
+    href: "/teachers",
     roles: ["SUPER_ADMIN", "TEACHER"] as User["role"][],
   },
 ];
@@ -211,6 +223,14 @@ export default function Home() {
               <span>Curriculum</span>
             </Link>
           )}
+          {(["SUPER_ADMIN", "TEACHER"] as User["role"][]).includes(
+            currentUser.role,
+          ) && (
+            <Link className="nav-item" href="/teachers">
+              <Users size={19} />
+              <span>Teachers</span>
+            </Link>
+          )}
           {currentUser.role === "SUPER_ADMIN" && (
             <>
               <Link className="nav-item" href="/academic-periods">
@@ -221,6 +241,14 @@ export default function Home() {
               <Link className="nav-item" href="/departments">
                 <Settings size={19} />
                 <span>Departments</span>
+              </Link>
+              <Link className="nav-item" href="/semester-fees">
+                <CreditCard size={19} />
+                <span>Semester fees</span>
+              </Link>
+              <Link className="nav-item" href="/credit-fees">
+                <CreditCard size={19} />
+                <span>Credit fees</span>
               </Link>
             </>
           )}

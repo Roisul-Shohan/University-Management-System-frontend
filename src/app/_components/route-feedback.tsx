@@ -2,7 +2,11 @@
 
 import { AlertTriangle, LoaderCircle } from "lucide-react";
 
-export function RouteLoading({ label = "Loading workspace..." }: { label?: string }) {
+export function RouteLoading({
+  label = "Loading workspace...",
+}: {
+  label?: string;
+}) {
   return (
     <main className="loading-screen" aria-live="polite" aria-busy="true">
       <div className="loading-mark" aria-hidden="true">

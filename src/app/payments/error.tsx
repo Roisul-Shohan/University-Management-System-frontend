@@ -16,7 +16,9 @@ export default function PaymentsError({
   return (
     <main className="loading-screen">
       <p role="alert">We couldn&apos;t load the payment workspace.</p>
-      <button className="submit-button" onClick={reset}>Try again</button>
+      <button className="submit-button" onClick={reset}>
+        Try again
+      </button>
     </main>
   );
 }

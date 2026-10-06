@@ -16,6 +16,11 @@ const roleRules: Record<string, string[]> = {
   "/course-registration": ["STUDENT"],
   "/exams": ["STUDENT"],
   "/exam-management": ["SUPER_ADMIN", "TEACHER"],
+  "/teachers": ["SUPER_ADMIN", "TEACHER"],
+  "/semester-fees": ["SUPER_ADMIN"],
+  "/credit-fees": ["SUPER_ADMIN"],
+  "/student-semesters": ["STUDENT"],
+  "/exam-attempts": ["STUDENT"],
 };
 
 export function middleware(request: NextRequest) {

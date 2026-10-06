@@ -17,12 +17,18 @@ export function GuideDialog() {
           <Dialog.Close className="dialog-close" aria-label="Close guide">
             <X size={18} />
           </Dialog.Close>
-          <Dialog.Title className="dialog-title">Northstar quick guide</Dialog.Title>
+          <Dialog.Title className="dialog-title">
+            Northstar quick guide
+          </Dialog.Title>
           <Dialog.Description className="dialog-description">
-            Use the sidebar to move between your role&apos;s workspace areas. Admins manage academic setup, teachers manage curriculum, and students can complete eligible payments.
+            Use the sidebar to move between your role&apos;s workspace areas.
+            Admins manage academic setup, teachers manage curriculum, and
+            students can complete eligible payments.
           </Dialog.Description>
           <Dialog.Close asChild>
-            <button className="submit-button" type="button">Got it</button>
+            <button className="submit-button" type="button">
+              Got it
+            </button>
           </Dialog.Close>
         </Dialog.Content>
       </Dialog.Portal>

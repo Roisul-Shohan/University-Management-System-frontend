@@ -176,10 +176,17 @@ function PaymentStatus({ transaction }: { transaction: PaymentTransaction }) {
   }, [queryClient, statusQuery.data?.transaction.status]);
 
   if (statusQuery.isError) {
-    return <div className={styles.waiting}>Unable to verify payment status. Please refresh.</div>;
+    return (
+      <div className={styles.waiting}>
+        Unable to verify payment status. Please refresh.
+      </div>
+    );
   }
 
-  if (statusQuery.isPending || statusQuery.data?.transaction.status === "PENDING") {
+  if (
+    statusQuery.isPending ||
+    statusQuery.data?.transaction.status === "PENDING"
+  ) {
     return <div className={styles.waiting}>Checking bKash payment status…</div>;
   }
 
@@ -187,5 +194,9 @@ function PaymentStatus({ transaction }: { transaction: PaymentTransaction }) {
     return <div className={styles.paid}>Payment completed and verified</div>;
   }
 
-  return <div className={styles.waiting}>Payment status: {statusQuery.data?.transaction.status ?? "Unknown"}</div>;
+  return (
+    <div className={styles.waiting}>
+      Payment status: {statusQuery.data?.transaction.status ?? "Unknown"}
+    </div>
+  );
 }

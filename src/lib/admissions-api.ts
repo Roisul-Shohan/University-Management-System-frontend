@@ -52,14 +52,23 @@ export const admissionsApi = {
       method: "POST",
       body: JSON.stringify(input),
     }),
-  reviewList: (params: { status?: AdmissionStatus; admissionYear?: number } = {}) => {
+  reviewList: (
+    params: { status?: AdmissionStatus; admissionYear?: number } = {},
+  ) => {
     const query = new URLSearchParams();
     if (params.status) query.set("status", params.status);
-    if (params.admissionYear) query.set("admissionYear", String(params.admissionYear));
-    return apiRequest<ReviewAdmission[]>(`/admissions${query.size ? `?${query}` : ""}`);
+    if (params.admissionYear)
+      query.set("admissionYear", String(params.admissionYear));
+    return apiRequest<ReviewAdmission[]>(
+      `/admissions${query.size ? `?${query}` : ""}`,
+    );
   },
   approve: (id: string) =>
-    apiRequest<ReviewAdmission>(`/admissions/${id}/approve`, { method: "PATCH" }),
+    apiRequest<ReviewAdmission>(`/admissions/${id}/approve`, {
+      method: "PATCH",
+    }),
   reject: (id: string) =>
-    apiRequest<ReviewAdmission>(`/admissions/${id}/reject`, { method: "PATCH" }),
+    apiRequest<ReviewAdmission>(`/admissions/${id}/reject`, {
+      method: "PATCH",
+    }),
 };

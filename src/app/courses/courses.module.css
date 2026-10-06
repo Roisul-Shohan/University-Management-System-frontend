@@ -1,2 +1,138 @@
-.toolbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 20px; }.toolbar select { min-height: 39px; min-width: 220px; padding: 0 11px; border: 1px solid #e3e2ec; border-radius: 7px; color: #5d5e73; background: white; font: inherit; font-size: 11px; outline: 0; }.count { display: flex; align-items: center; gap: 9px; color: #6e7085; font-size: 12px; font-weight: 700; }.count svg { color: #776bf0; }.table { overflow: hidden; border: 1px solid #ebeaf3; border-radius: 12px; background: #fff; }.row { display: grid; grid-template-columns: 42px minmax(170px, 1.5fr) 1fr 80px 62px; align-items: center; gap: 14px; min-height: 78px; padding: 14px 20px; border-bottom: 1px solid #f0eff5; }.row:last-child { border-bottom: 0; }.courseIcon { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; color: #7065e8; background: #eeedff; }.courseMain strong, .courseMain span, .department strong, .department small, .credits strong, .credits span { display: block; }.courseMain strong { color: #373850; font-size: 11px; letter-spacing: .05em; }.courseMain span { margin-top: 6px; color: #77788d; font-size: 12px; }.department { color: #5d5e73; font-size: 11px; font-weight: 700; }.department small { margin-top: 5px; overflow: hidden; color: #a1a2b0; font-size: 9px; font-weight: 400; text-overflow: ellipsis; white-space: nowrap; }.credits { text-align: center; }.credits strong { color: #3a3b53; font-size: 14px; }.credits span { margin-top: 3px; color: #a2a3b1; font-size: 9px; }.actions { display: flex; gap: 8px; }.actions button { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 6px; color: #7469e8; background: #f3f2ff; }.actions .danger { color: #bd6b78; background: #fff3f5; }.formGrid { display: grid; grid-template-columns: 1fr .6fr; gap: 12px; }
-@media (max-width: 700px) { .toolbar { align-items: flex-start; flex-direction: column; }.toolbar select { width: 100%; }.table { overflow: auto; }.row { min-width: 680px; } }
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+.toolbar select {
+  min-height: 39px;
+  min-width: 220px;
+  padding: 0 11px;
+  border: 1px solid #e3e2ec;
+  border-radius: 7px;
+  color: #5d5e73;
+  background: white;
+  font: inherit;
+  font-size: 11px;
+  outline: 0;
+}
+.count {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #6e7085;
+  font-size: 12px;
+  font-weight: 700;
+}
+.count svg {
+  color: #776bf0;
+}
+.table {
+  overflow: hidden;
+  border: 1px solid #ebeaf3;
+  border-radius: 12px;
+  background: #fff;
+}
+.row {
+  display: grid;
+  grid-template-columns: 42px minmax(170px, 1.5fr) 1fr 80px 62px;
+  align-items: center;
+  gap: 14px;
+  min-height: 78px;
+  padding: 14px 20px;
+  border-bottom: 1px solid #f0eff5;
+}
+.row:last-child {
+  border-bottom: 0;
+}
+.courseIcon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  color: #7065e8;
+  background: #eeedff;
+}
+.courseMain strong,
+.courseMain span,
+.department strong,
+.department small,
+.credits strong,
+.credits span {
+  display: block;
+}
+.courseMain strong {
+  color: #373850;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+}
+.courseMain span {
+  margin-top: 6px;
+  color: #77788d;
+  font-size: 12px;
+}
+.department {
+  color: #5d5e73;
+  font-size: 11px;
+  font-weight: 700;
+}
+.department small {
+  margin-top: 5px;
+  overflow: hidden;
+  color: #a1a2b0;
+  font-size: 9px;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.credits {
+  text-align: center;
+}
+.credits strong {
+  color: #3a3b53;
+  font-size: 14px;
+}
+.credits span {
+  margin-top: 3px;
+  color: #a2a3b1;
+  font-size: 9px;
+}
+.actions {
+  display: flex;
+  gap: 8px;
+}
+.actions button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  color: #7469e8;
+  background: #f3f2ff;
+}
+.actions .danger {
+  color: #bd6b78;
+  background: #fff3f5;
+}
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 0.6fr;
+  gap: 12px;
+}
+@media (max-width: 700px) {
+  .toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .toolbar select {
+    width: 100%;
+  }
+  .table {
+    overflow: auto;
+  }
+  .row {
+    min-width: 680px;
+  }
+}

@@ -126,7 +126,9 @@ export default function LoginPage() {
                   autoComplete="email"
                 />
               </div>
-              {errors.email && <span className="field-error">{errors.email.message}</span>}
+              {errors.email && (
+                <span className="field-error">{errors.email.message}</span>
+              )}
             </label>
             <label htmlFor="password">
               Password
@@ -147,7 +149,11 @@ export default function LoginPage() {
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
-              {errors.password && <span className="field-error">{errors.password.message}</span>}
+                  {errors.password && (
+                    <span className="field-error">
+                      {errors.password.message}
+                    </span>
+                  )}
                 </button>
               </div>
             </label>
@@ -178,7 +184,9 @@ export default function LoginPage() {
                   key={account.role}
                   type="button"
                   disabled={loading}
-                  onClick={() => handleDemoLogin(account.email, account.password)}
+                  onClick={() =>
+                    handleDemoLogin(account.email, account.password)
+                  }
                 >
                   <strong>{account.label}</strong>
                   <span>{account.role.replace("_", " ")}</span>

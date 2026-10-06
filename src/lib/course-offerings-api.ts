@@ -32,13 +32,25 @@ export const courseOfferingsApi = {
   list: (params: Partial<CourseOfferingInput> = {}) => {
     const query = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== "") query.set(key, String(value));
+      if (value !== undefined && value !== null && value !== "")
+        query.set(key, String(value));
     });
-    return apiRequest<CourseOffering[]>(`/api/course-offerings${query.size ? `?${query}` : ""}`);
+    return apiRequest<CourseOffering[]>(
+      `/api/course-offerings${query.size ? `?${query}` : ""}`,
+    );
   },
-  create: (input: CourseOfferingInput) => apiRequest<CourseOffering>("/api/course-offerings", { method: "POST", body: JSON.stringify(input) }),
-  update: (id: string, input: Partial<CourseOfferingInput>) => apiRequest<CourseOffering>(`/api/course-offerings/${id}`, { method: "PATCH", body: JSON.stringify(input) }),
-  remove: (id: string) => apiRequest<null>(`/api/course-offerings/${id}`, { method: "DELETE" }),
+  create: (input: CourseOfferingInput) =>
+    apiRequest<CourseOffering>("/api/course-offerings", {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+  update: (id: string, input: Partial<CourseOfferingInput>) =>
+    apiRequest<CourseOffering>(`/api/course-offerings/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    }),
+  remove: (id: string) =>
+    apiRequest<null>(`/api/course-offerings/${id}`, { method: "DELETE" }),
 };
 
 export const teachersApi = {

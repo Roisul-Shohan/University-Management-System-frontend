@@ -47,9 +47,14 @@ export const examsApi = {
   list: () => apiRequest<Exam[]>("/api/exams?status=PUBLISHED"),
   managerList: () => apiRequest<Exam[]>("/api/exams"),
   create: (input: ExamInput) =>
-    apiRequest<Exam>("/api/exams", { method: "POST", body: JSON.stringify(input) }),
-  publish: (id: string) => apiRequest<Exam>(`/api/exams/${id}/publish`, { method: "PATCH" }),
-  close: (id: string) => apiRequest<Exam>(`/api/exams/${id}/close`, { method: "PATCH" }),
+    apiRequest<Exam>("/api/exams", {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+  publish: (id: string) =>
+    apiRequest<Exam>(`/api/exams/${id}/publish`, { method: "PATCH" }),
+  close: (id: string) =>
+    apiRequest<Exam>(`/api/exams/${id}/close`, { method: "PATCH" }),
   start: (examId: string) =>
     apiRequest<ExamAttempt>(`/api/exams/${examId}/start`, { method: "POST" }),
   attempt: (attemptId: string) =>

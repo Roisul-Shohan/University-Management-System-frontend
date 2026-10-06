@@ -67,8 +67,7 @@ export function useAuth() {
 export function useAuthGuard(roles?: User["role"][]) {
   const router = useRouter();
   const auth = useAuth();
-  const authorized =
-    !!auth.user && (!roles || roles.includes(auth.user.role));
+  const authorized = !!auth.user && (!roles || roles.includes(auth.user.role));
 
   useEffect(() => {
     if (auth.loading) return;
