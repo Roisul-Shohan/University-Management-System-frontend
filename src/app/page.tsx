@@ -83,6 +83,12 @@ const navItems = [
     href: "/admission-review",
     roles: ["SUPER_ADMIN", "TEACHER"] as User["role"][],
   },
+  {
+    label: "Exam management",
+    icon: ClipboardCheck,
+    href: "/exam-management",
+    roles: ["SUPER_ADMIN", "TEACHER"] as User["role"][],
+  },
 ];
 
 const activity = [
