@@ -77,6 +77,12 @@ const navItems = [
     roles: ["STUDENT"] as User["role"][],
   },
   {
+    label: "Attendance",
+    icon: CalendarDays,
+    href: "/attendance",
+    roles: ["SUPER_ADMIN", "TEACHER", "STUDENT"] as User["role"][],
+  },
+  {
     label: "Exam attempts",
     icon: ClipboardList,
     href: "/exam-attempts",
