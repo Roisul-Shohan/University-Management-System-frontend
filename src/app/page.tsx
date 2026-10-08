@@ -96,6 +96,12 @@ const navItems = [
     roles: ["SUPER_ADMIN", "TEACHER"] as User["role"][],
   },
   {
+    label: "Exam questions",
+    icon: ClipboardList,
+    href: "/exam-questions",
+    roles: ["SUPER_ADMIN", "TEACHER"] as User["role"][],
+  },
+  {
     label: "Teachers",
     icon: Users,
     href: "/teachers",
