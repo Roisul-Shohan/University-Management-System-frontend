@@ -8,87 +8,55 @@ import {
   LockKeyhole,
   Mail,
   ShieldCheck,
+  User,
+  Sparkles,
+  CalendarDays,
 } from "lucide-react";
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useAuth } from "@/app/auth-provider";
-import { demoAccounts } from "@/lib/demo-accounts";
-import { useEffect } from "react";
+import { authApi } from "@/lib/api";
 
-const loginSchema = z.object({
+const registerSchema = z.object({
+  name: z.string().trim().min(3, "Name must be at least 3 characters."),
   email: z.string().trim().email("Enter a valid email address."),
   password: z.string().min(6, "Password must be at least 6 characters."),
+  role: z.enum(["STUDENT", "TEACHER"], { required_error: "Select a role." }),
 });
 
-type LoginValues = z.infer<typeof loginSchema>;
+type RegisterValues = z.infer<typeof registerSchema>;
 
-type LoginFormProps = {};
-
-export default function LoginForm({}: LoginFormProps) {
+export default function RegisterPage() {
   const router = useRouter();
-  const urlSearchParams = useSearchParams();
-  const serverError = urlSearchParams.get("error") ?? "";
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const { login } = useAuth();
-
-  useEffect(() => {
-    if (serverError) {
-      setError(serverError);
-    }
-  }, [serverError]);
 
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
-  } = useForm<LoginValues>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
+  } = useForm<RegisterValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: { name: "", email: "", password: "", role: "STUDENT" },
   });
 
-  async function submitLogin(values: LoginValues) {
+  const selectedRole = watch("role");
+
+  async function submitRegister(values: RegisterValues) {
     setError("");
     setLoading(true);
     try {
-      const result = await login(values.email, values.password);
-      const rolePath = result.role === "SUPER_ADMIN" ? "/dashboard" : result.role === "TEACHER" ? "/dashboard" : "/dashboard";
-      router.replace(rolePath);
+      const result = await authApi.register(values.name, values.email, values.password, values.role);
+      router.replace(`/verify-email?email=${encodeURIComponent(result.email)}&role=${values.role}`);
     } catch (requestError) {
       setError(
         requestError instanceof Error
           ? requestError.message
-          : "Unable to sign in.",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleDemoLogin(demoEmail: string, demoPassword: string) {
-    if (!demoEmail || !demoPassword) {
-      setError("Demo credentials are not configured for this environment.");
-      return;
-    }
-
-    setError("");
-    setLoading(true);
-    try {
-      const result = await login(demoEmail, demoPassword);
-      const rolePath = result.role === "SUPER_ADMIN" ? "/dashboard" : result.role === "TEACHER" ? "/dashboard" : "/dashboard";
-      router.replace(rolePath);
-    } catch (requestError) {
-      setError(
-        requestError instanceof Error
-          ? requestError.message
-          : "Unable to sign in with the demo account.",
+          : "Unable to create account.",
       );
     } finally {
       setLoading(false);
@@ -109,10 +77,9 @@ export default function LoginForm({}: LoginFormProps) {
         </div>
         <div className="showcase-copy">
           <p className="auth-kicker">One connected campus</p>
-          <h1>Bring every part of university life into focus.</h1>
+          <h1>Create your account</h1>
           <p>
-            Manage people, programs, payments, and progress from one calm,
-            thoughtful workspace.
+            Join Northstar University and access your personalized workspace.
           </p>
         </div>
         <div className="showcase-stat">
@@ -122,15 +89,46 @@ export default function LoginForm({}: LoginFormProps) {
             <small>Your account is protected with verified access.</small>
           </span>
         </div>
+        <div className="showcase-benefits">
+          <div className="benefit-item">
+            <Sparkles size={18} />
+            <span>Personalized dashboard for your role</span>
+          </div>
+          <div className="benefit-item">
+            <CalendarDays size={18} />
+            <span>Access schedules, grades & resources</span>
+          </div>
+          <div className="benefit-item">
+            <ShieldCheck size={18} />
+            <span>Secure authentication & privacy</span>
+          </div>
+        </div>
       </section>
       <section className="auth-card-wrap">
         <div className="auth-card">
           <div className="auth-card-heading">
-            <p className="eyebrow">Welcome back</p>
-            <h2>Sign in to your workspace</h2>
-            <p>Use your university account to continue.</p>
+            <p className="eyebrow">Sign up</p>
+            <h2>Create your university account</h2>
+            <p>Choose your role and enter your details to get started.</p>
           </div>
-          <form onSubmit={handleSubmit(submitLogin)} className="auth-form">
+          <form onSubmit={handleSubmit(submitRegister)} className="auth-form">
+            <label htmlFor="name">
+              Full name
+              <div className="input-wrap">
+                <User size={17} />
+                <input
+                  id="name"
+                  type="text"
+                  {...register("name")}
+                  placeholder="John Doe"
+                  required
+                  autoComplete="name"
+                />
+              </div>
+              {errors.name && (
+                <span className="field-error">{errors.name.message}</span>
+              )}
+            </label>
             <label htmlFor="email">
               Email address
               <div className="input-wrap">
@@ -156,10 +154,10 @@ export default function LoginForm({}: LoginFormProps) {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   {...register("password")}
-                  placeholder="Enter your password"
+                  placeholder="Create a password"
                   required
                   minLength={6}
-                  autoComplete="current-password"
+                  autoComplete="new-password"
                 />
                 <button
                   type="button"
@@ -175,46 +173,37 @@ export default function LoginForm({}: LoginFormProps) {
                 </button>
               </div>
             </label>
-            <div className="form-options">
-              <label className="remember">
-                <input type="checkbox" /> <span>Remember me</span>
-              </label>
-              <button type="button" className="text-button">
-                Forgot password?
-              </button>
-            </div>
+            <label htmlFor="role">
+              Role
+              <div className="input-wrap">
+                <ShieldCheck size={17} />
+                <select
+                  id="role"
+                  {...register("role")}
+                  required
+                  className="role-select"
+                >
+                  <option value="STUDENT">Student</option>
+                  <option value="TEACHER">Teacher</option>
+                </select>
+              </div>
+              {errors.role && (
+                <span className="field-error">{errors.role.message}</span>
+              )}
+            </label>
             {error && (
               <p className="form-error" role="alert">
                 {error}
               </p>
             )}
             <button className="submit-button" type="submit" disabled={loading}>
-              {loading ? "Signing in..." : "Sign in"}{" "}
+              {loading ? "Creating account..." : "Create account"}{" "}
               {!loading && <ArrowRight size={17} />}
             </button>
           </form>
-          <div className="demo-login" aria-label="Demo login accounts">
-            <p className="demo-login-title">Try a demo workspace</p>
-            <div className="demo-login-grid">
-              {demoAccounts.map((account) => (
-                <button
-                  className="demo-login-button"
-                  key={account.role}
-                  type="button"
-                  disabled={loading}
-                  onClick={() =>
-                    handleDemoLogin(account.email, account.password)
-                  }
-                >
-                  <strong>{account.label}</strong>
-                  <span>{account.role.replace("_", " ")}</span>
-                </button>
-              ))}
-            </div>
-          </div>
           <p className="auth-footnote">
-            Don't have an account?{" "}
-            <a href="/register" className="text-button">Sign up</a>
+            Already have an account?{" "}
+            <a href="/login">Sign in</a>
           </p>
         </div>
       </section>

@@ -6,13 +6,12 @@ export type Teacher = {
   designation?: string | null;
   isDeptAdmin: boolean;
   joiningYear?: number | null;
-  status: "ACTIVE" | "INACTIVE" | "PENDING";
   user: {
     id: string;
     name: string;
     email: string;
     role: "TEACHER";
-    status?: string;
+    status: "ACTIVE" | "DISABLED" | "SUSPENDED";
   };
   department?: {
     id: string;
@@ -49,6 +48,10 @@ export type UpdateTeacherAdminInput = {
   isDeptAdmin: boolean;
 };
 
+export type UpdateTeacherStatusInput = {
+  status: "ACTIVE" | "DISABLED" | "SUSPENDED";
+};
+
 export type TeachersQuery = {
   departmentId?: string;
   isDeptAdmin?: boolean;
@@ -79,6 +82,11 @@ export const teachersApi = {
   },
   updateAdminStatus: (id: string, input: UpdateTeacherAdminInput) =>
     apiRequest<Teacher>(`/api/teachers/${encodeURIComponent(id)}/admin-status`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    }),
+  updateStatus: (id: string, input: UpdateTeacherStatusInput) =>
+    apiRequest<Teacher>(`/api/teachers/${encodeURIComponent(id)}/status`, {
       method: "PATCH",
       body: JSON.stringify(input),
     }),

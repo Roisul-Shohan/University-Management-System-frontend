@@ -1,581 +1,199 @@
-"use client";
-
-import {
-  ArrowUpRight,
-  Bell,
-  BookOpen,
-  CalendarDays,
-  CalendarCheck,
-  ClipboardCheck,
-  ClipboardList,
-  CreditCard,
-  BookMarked,
-  FileText,
-  ChevronDown,
-  GraduationCap,
-  LayoutDashboard,
-  LogOut,
-  Menu,
-  MoreHorizontal,
-  Search,
-  Settings,
-  ShieldCheck,
-  Sparkles,
-  Users,
-  X,
-} from "lucide-react";
-import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "./auth-provider";
-import { GuideDialog } from "./_components/guide-dialog";
-import type { User } from "@/lib/api";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { notificationsApi } from "@/lib/notifications-api";
+import { GraduationCap, ArrowRight, Layers, ShieldCheck, Globe, Zap, Users2, LineChart } from "lucide-react";
 
-const navItems = [
-  { label: "Overview", icon: LayoutDashboard, active: true, href: "/" },
-  {
-    label: "Students",
-    icon: Users,
-    roles: ["SUPER_ADMIN", "TEACHER"] as User["role"][],
-  },
-  { label: "Courses", icon: BookOpen, href: "/courses" },
-  {
-    label: "Calendar",
-    icon: CalendarDays,
-    roles: ["TEACHER", "STUDENT"] as User["role"][],
-  },
-  {
-    label: "Payments",
-    icon: CreditCard,
-    href: "/payments",
-    roles: ["STUDENT"] as User["role"][],
-  },
-  {
-    label: "Admissions",
-    icon: FileText,
-    href: "/admissions",
-    roles: ["STUDENT"] as User["role"][],
-  },
-  {
-    label: "Semester registration",
-    icon: CalendarCheck,
-    href: "/semester-registration",
-    roles: ["STUDENT"] as User["role"][],
-  },
-  {
-    label: "Course registration",
-    icon: BookMarked,
-    href: "/course-registration",
-    roles: ["STUDENT"] as User["role"][],
-  },
-  {
-    label: "Exams",
-    icon: ClipboardList,
-    href: "/exams",
-    roles: ["STUDENT"] as User["role"][],
-  },
-  {
-    label: "Attendance",
-    icon: CalendarDays,
-    href: "/attendance",
-    roles: ["SUPER_ADMIN", "TEACHER", "STUDENT"] as User["role"][],
-  },
-  {
-    label: "Exam attempts",
-    icon: ClipboardList,
-    href: "/exam-attempts",
-    roles: ["STUDENT"] as User["role"][],
-  },
-  { label: "Notifications", icon: Bell, href: "/notifications" },
-  {
-    label: "Admission review",
-    icon: ClipboardCheck,
-    href: "/admission-review",
-    roles: ["SUPER_ADMIN", "TEACHER"] as User["role"][],
-  },
-  {
-    label: "Exam management",
-    icon: ClipboardCheck,
-    href: "/exam-management",
-    roles: ["SUPER_ADMIN", "TEACHER"] as User["role"][],
-  },
-  {
-    label: "Exam questions",
-    icon: ClipboardList,
-    href: "/exam-questions",
-    roles: ["SUPER_ADMIN", "TEACHER"] as User["role"][],
-  },
-  {
-    label: "Teachers",
-    icon: Users,
-    href: "/teachers",
-    roles: ["SUPER_ADMIN", "TEACHER"] as User["role"][],
-  },
-];
-
-const activity = [
-  {
-    title: "New admission application",
-    detail: "Sarah Williams · BSc Computer Science",
-    time: "12 min ago",
-    tone: "violet",
-  },
-  {
-    title: "Payment received",
-    detail: "James Anderson · Semester fee",
-    time: "48 min ago",
-    tone: "emerald",
-  },
-  {
-    title: "Course updated",
-    detail: "Advanced Database Systems · CSE 402",
-    time: "2 hrs ago",
-    tone: "amber",
-  },
-];
-
-export default function Home() {
-  const router = useRouter();
-  const { user: currentUser, loading: checkingSession, logout } = useAuth();
-  const unreadNotifications = useQuery({
-    queryKey: ["notifications", "unread-count"],
-    queryFn: notificationsApi.unreadCount,
-    enabled: !!currentUser,
-    refetchInterval: 60_000,
-    retry: false,
-  });
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [loggingOut, setLoggingOut] = useState(false);
-
-  useEffect(() => {
-    if (!checkingSession && !currentUser) {
-      router.replace("/login");
-    }
-  }, [checkingSession, currentUser, router]);
-
-  async function handleLogout() {
-    setLoggingOut(true);
-    try {
-      await logout();
-      router.replace("/login");
-    } finally {
-      setLoggingOut(false);
-    }
-  }
-
-  if (checkingSession) {
-    return (
-      <main className="loading-screen">
-        <div className="loading-mark">
-          <GraduationCap size={22} />
-        </div>
-        <p>Loading your workspace...</p>
-      </main>
-    );
-  }
-
-  if (!currentUser) return null;
-
+export default function LandingPage() {
   return (
-    <main className="app-shell">
-      <aside className={`sidebar ${mobileOpen ? "sidebar-open" : ""}`}>
-        <div className="brand">
-          <div className="brand-mark">
-            <GraduationCap size={22} />
-          </div>
-          <div>
-            <strong>Northstar</strong>
-            <span>University</span>
-          </div>
-          <button
-            className="mobile-close"
-            onClick={() => setMobileOpen(false)}
-            aria-label="Close menu"
-          >
-            <X size={20} />
-          </button>
-        </div>
-        <div className="workspace-label">Workspace</div>
-        <nav className="main-nav" aria-label="Main navigation">
-          {navItems
-            .filter(({ roles }) => !roles || roles.includes(currentUser.role))
-            .map(({ label, icon: Icon, active, href }) =>
-              href ? (
-                <Link
-                  className={`nav-item ${active ? "active" : ""}`}
-                  href={href}
-                  key={label}
-                >
-                  <Icon size={19} strokeWidth={active ? 2.4 : 2} />
-                  <span>{label}</span>
-                </Link>
-              ) : (
-                <button
-                  className={`nav-item ${active ? "active" : ""}`}
-                  key={label}
-                >
-                  <Icon size={19} strokeWidth={active ? 2.4 : 2} />
-                  <span>{label}</span>
-                  {label === "Students" && (
-                    <span className="nav-count">1,248</span>
-                  )}
-                </button>
-              ),
-            )}
-        </nav>
-        <div className="workspace-label secondary-label">Manage</div>
-        <nav className="main-nav">
-          {(["SUPER_ADMIN", "TEACHER"] as User["role"][]).includes(
-            currentUser.role,
-          ) && (
-            <Link className="nav-item" href="/curriculum-courses">
-              <BookOpen size={19} />
-              <span>Curriculum</span>
-            </Link>
-          )}
-          {(["SUPER_ADMIN", "TEACHER"] as User["role"][]).includes(
-            currentUser.role,
-          ) && (
-            <Link className="nav-item" href="/teachers">
-              <Users size={19} />
-              <span>Teachers</span>
-            </Link>
-          )}
-          {currentUser.role === "SUPER_ADMIN" && (
-            <>
-              <Link className="nav-item" href="/academic-periods">
-                <ShieldCheck size={19} />
-                <span>Academic periods</span>
-                <span className="nav-dot" />
-              </Link>
-              <Link className="nav-item" href="/departments">
-                <Settings size={19} />
-                <span>Departments</span>
-              </Link>
-              <Link className="nav-item" href="/semester-fees">
-                <CreditCard size={19} />
-                <span>Semester fees</span>
-              </Link>
-              <Link className="nav-item" href="/credit-fees">
-                <CreditCard size={19} />
-                <span>Credit fees</span>
-              </Link>
-            </>
-          )}
-          <button className="nav-item">
-            <Settings size={19} />
-            <span>Settings</span>
-          </button>
-        </nav>
-        <div className="sidebar-footer">
-          <div className="help-card">
-            <Sparkles size={19} />
-            <strong>Need a hand?</strong>
-            <p>Explore the admin guide to get started.</p>
-            <GuideDialog />
-          </div>
-          <button
-            className="profile-chip"
-            onClick={handleLogout}
-            disabled={loggingOut}
-            title="Sign out"
-          >
-            <div className="avatar avatar-small">
-              {getInitials(currentUser.name)}
+    <div className="min-h-screen bg-slate-950 text-slate-50 font-sans selection:bg-indigo-500/30 overflow-x-hidden">
+      {/* Background Effects */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-600/20 blur-[120px]" />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-600/20 blur-[120px]" />
+        <div className="absolute top-[40%] left-[60%] w-[30%] h-[30%] rounded-full bg-purple-600/10 blur-[100px]" />
+      </div>
+
+      {/* Navigation */}
+      <nav className="relative z-10 border-b border-white/5 bg-slate-950/50 backdrop-blur-xl">
+        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+              <GraduationCap className="w-6 h-6 text-white" />
             </div>
             <div>
-              <strong>
-                {loggingOut ? "Signing out..." : currentUser.name}
-              </strong>
-              <span>{formatRole(currentUser.role)}</span>
+              <span className="block text-lg font-bold tracking-tight text-white leading-tight">Northstar</span>
+              <span className="block text-[10px] uppercase tracking-[0.2em] text-indigo-400 font-semibold leading-tight">University</span>
             </div>
-            <LogOut size={17} />
-          </button>
-        </div>
-      </aside>
-
-      {mobileOpen && (
-        <button
-          className="mobile-backdrop"
-          onClick={() => setMobileOpen(false)}
-          aria-label="Close navigation"
-        />
-      )}
-
-      <section className="main-content">
-        <header className="topbar">
-          <button
-            className="mobile-menu"
-            onClick={() => setMobileOpen(true)}
-            aria-label="Open menu"
-          >
-            <Menu size={22} />
-          </button>
-          <div className="breadcrumb">
-            <span>Workspace</span>
-            <span>/</span>
-            <strong>Overview</strong>
           </div>
-          <div className="topbar-actions">
-            <button className="icon-button search-button" aria-label="Search">
-              <Search size={19} />
-            </button>
+          <div className="flex flex-items-center gap-6">
+            <Link href="/login" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
+              Sign In
+            </Link>
             <Link
-              href="/notifications"
-              className="icon-button notification-button"
-              aria-label="Notifications"
+              href="/login"
+              className="group relative px-6 py-2.5 text-sm font-medium bg-white text-slate-950 rounded-full hover:bg-indigo-50 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(255,255,255,0.2)]"
             >
-              <Bell size={19} />
-              {(unreadNotifications.data?.count ?? 0) > 0 && (
-                <span className="notification-count">
-                  {unreadNotifications.data?.count}
-                </span>
-              )}
+              <span className="flex items-center gap-2">
+                Access Portal
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              </span>
             </Link>
-            <div className="top-avatar">{getInitials(currentUser.name)}</div>
           </div>
-        </header>
+        </div>
+      </nav>
 
-        <div className="content-wrap">
-          <div className="welcome-row">
-            <div>
-              <p className="eyebrow">Wednesday, September 24, 2026</p>
-              <h1>
-                Good morning, {currentUser.name.split(" ")[0]} <span>👋</span>
-              </h1>
-              <p className="subtitle">
-                Here&apos;s what&apos;s happening across your university today.
+      <main className="relative z-10">
+        {/* Hero Section */}
+        <section className="pt-32 pb-24 px-6 text-center max-w-5xl mx-auto">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-medium uppercase tracking-wider mb-8">
+            <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+            Next-Gen Campus Management
+          </div>
+          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 leading-[1.1]">
+            Elevate your academic <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-blue-400">
+              infrastructure.
+            </span>
+          </h1>
+          <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed mb-12">
+            A unified, intelligent platform designed to streamline administration, empower educators, and enrich the student experience—all tailored for modern universities.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link
+              href="/login"
+              className="w-full sm:w-auto px-8 py-4 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition-all shadow-lg shadow-indigo-600/25 hover:shadow-indigo-600/40 flex items-center justify-center gap-2"
+            >
+              Enter Workspace
+            </Link>
+            <Link
+              href="#features"
+              className="w-full sm:w-auto px-8 py-4 rounded-full bg-white/5 hover:bg-white/10 text-white font-medium border border-white/10 transition-all flex items-center justify-center gap-2"
+            >
+              Explore Features
+            </Link>
+          </div>
+        </section>
+
+        {/* Presentation Graphic */}
+        <div className="max-w-6xl mx-auto px-6 mb-32 hidden md:block">
+          <div className="rounded-2xl border border-white/10 bg-slate-900/50 backdrop-blur-sm p-2 shadow-2xl relative">
+            <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/10 to-transparent rounded-2xl pointer-events-none" />
+            <div className="aspect-[16/9] rounded-xl bg-slate-950 border border-white/5 overflow-hidden relative flex items-center justify-center">
+              {/* Dashboard abstract representation */}
+              <div className="absolute inset-0 grid grid-cols-4 grid-rows-3 gap-4 p-8 opacity-40">
+                <div className="col-span-1 row-span-3 rounded-lg border border-white/10 bg-white/5" />
+                <div className="col-span-3 row-span-1 rounded-lg border border-white/10 bg-white/5 flex items-center px-6">
+                  <div className="w-1/3 h-4 bg-white/10 rounded-full" />
+                </div>
+                <div className="col-span-3 row-span-2 grid grid-cols-3 gap-4">
+                  <div className="rounded-lg border border-indigo-500/20 bg-indigo-500/5 p-4 flex flex-col justify-between">
+                    <div className="w-8 h-8 rounded-full bg-indigo-500/20" />
+                    <div className="w-full h-2 bg-indigo-500/20 rounded-full mt-4" />
+                    <div className="w-2/3 h-2 bg-indigo-500/20 rounded-full mt-2" />
+                  </div>
+                  <div className="rounded-lg border border-purple-500/20 bg-purple-500/5 p-4 flex flex-col justify-between">
+                    <div className="w-8 h-8 rounded-full bg-purple-500/20" />
+                    <div className="w-full h-2 bg-purple-500/20 rounded-full mt-4" />
+                    <div className="w-2/3 h-2 bg-purple-500/20 rounded-full mt-2" />
+                  </div>
+                  <div className="rounded-lg border border-white/10 bg-white/5 p-4 flex flex-col justify-between">
+                    <div className="w-8 h-8 rounded-full bg-white/10" />
+                    <div className="w-full h-2 bg-white/10 rounded-full mt-4" />
+                    <div className="w-2/3 h-2 bg-white/10 rounded-full mt-2" />
+                  </div>
+                  <div className="col-span-3 rounded-lg border border-white/10 bg-white/5 p-6 flex items-end">
+                    <div className="w-full h-32 flex items-end gap-2">
+                      {[40, 70, 45, 90, 65, 100, 80].map((h, i) => (
+                        <div key={i} className="flex-1 bg-gradient-to-t from-indigo-500/40 to-transparent rounded-t-sm" style={{ height: `${h}%` }} />
+                       ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent z-10" />
+            </div>
+          </div>
+        </div>
+
+        {/* Features Section */}
+        <section id="features" className="py-24 border-t border-white/5 bg-slate-900/20">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="text-center mb-20">
+              <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-6">Built for performance.</h2>
+              <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+                Everything you need to manage your institution, from admissions and complex scheduling to real-time financial tracking.
               </p>
             </div>
-            <button className="period-button">
-              Fall 2026 <ChevronDown size={16} />
-            </button>
-          </div>
 
-          <div className="stats-grid">
-            <StatCard
-              label="Total students"
-              value="1,248"
-              change="12.8%"
-              icon={<Users size={20} />}
-              tone="blue"
-            />
-            <StatCard
-              label="Active courses"
-              value="86"
-              change="4.6%"
-              icon={<BookOpen size={20} />}
-              tone="violet"
-            />
-            <StatCard
-              label="Pending admissions"
-              value="24"
-              change="8.2%"
-              icon={<ShieldCheck size={20} />}
-              tone="amber"
-            />
-            <StatCard
-              label="Fee collection"
-              value="$84,620"
-              change="18.4%"
-              icon={<Sparkles size={20} />}
-              tone="emerald"
-            />
-          </div>
-
-          <div className="dashboard-grid">
-            <section className="panel schedule-panel">
-              <PanelHeading title="Today's schedule" action="View calendar" />
-              <div className="schedule-list">
-                <ScheduleItem
-                  time="09:00"
-                  period="AM"
-                  title="Faculty meeting"
-                  detail="Senate Room · Main Building"
-                  color="blue"
-                />
-                <ScheduleItem
-                  time="11:30"
-                  period="AM"
-                  title="Admissions review"
-                  detail="3 applications awaiting review"
-                  color="violet"
-                />
-                <ScheduleItem
-                  time="02:00"
-                  period="PM"
-                  title="CSE Department sync"
-                  detail="Innovation Hub · Room 204"
-                  color="amber"
-                />
-              </div>
-            </section>
-            <section className="panel activity-panel">
-              <PanelHeading title="Recent activity" action="View all" />
-              <div className="activity-list">
-                {activity.map((item) => (
-                  <div className="activity-item" key={item.title}>
-                    <div className={`activity-icon ${item.tone}`}>
-                      <Sparkles size={16} />
-                    </div>
-                    <div className="activity-copy">
-                      <strong>{item.title}</strong>
-                      <span>{item.detail}</span>
-                    </div>
-                    <time>{item.time}</time>
+            <div className="grid md:grid-cols-3 gap-6">
+              {[
+                {
+                  title: "Seamless Admissions",
+                  desc: "Streamline student onboarding with automated application reviews and programmatic status transitions.",
+                  icon: Layers,
+                  color: "text-blue-400",
+                  bg: "bg-blue-500/10"
+                },
+                {
+                  title: "Role-Based Security",
+                  desc: "Enterprise-grade authorization ensuring students, teachers, and admins have precise access controls.",
+                  icon: ShieldCheck,
+                  color: "text-emerald-400",
+                  bg: "bg-emerald-500/10"
+                },
+                {
+                  title: "Dynamic Curriculum",
+                  desc: "Easily design programs, assign pre-requisites, and allocate resources across multiple departments.",
+                  icon: Globe,
+                  color: "text-purple-400",
+                  bg: "bg-purple-500/10"
+                },
+                {
+                  title: "Real-time Tracking",
+                  desc: "Instant insights on enrollments, financial collections, and campus activity through our live dashboard.",
+                  icon: LineChart,
+                  color: "text-indigo-400",
+                  bg: "bg-indigo-500/10"
+                },
+                {
+                  title: "Rapid Performance",
+                  desc: "Optimized infrastructure delivering sub-second response times for complex queries and heavy loads.",
+                  icon: Zap,
+                  color: "text-amber-400",
+                  bg: "bg-amber-500/10"
+                },
+                {
+                  title: "Faculty Empowerment",
+                  desc: "Give teachers the tools they need to manage grades, publish exams, and handle class sessions effortlessly.",
+                  icon: Users2,
+                  color: "text-rose-400",
+                  bg: "bg-rose-500/10"
+                },
+              ].map((feature, idx) => (
+                <div key={idx} className="group p-8 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-bl-full translate-x-16 -translate-y-16 group-hover:scale-110 transition-transform" />
+                  <div className={`w-12 h-12 rounded-xl ${feature.bg} flex items-center justify-center mb-6`}>
+                    <feature.icon className={`w-6 h-6 ${feature.color}`} />
                   </div>
-                ))}
-              </div>
-            </section>
+                  <h3 className="text-xl font-semibold text-white mb-3">{feature.title}</h3>
+                  <p className="text-slate-400 leading-relaxed text-sm">{feature.desc}</p>
+                </div>
+              ))}
           </div>
-
-          <section className="panel enrollment-panel">
-            <PanelHeading
-              title="Enrollment overview"
-              action="Last 6 months"
-              dropdown
-            />
-            <div className="chart-wrap">
-              <div className="chart-y">
-                <span>1,300</span>
-                <span>1,000</span>
-                <span>700</span>
-                <span>400</span>
-                <span>100</span>
-              </div>
-              <div className="chart">
-                <div className="grid-lines">
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                </div>
-                <svg
-                  viewBox="0 0 700 170"
-                  preserveAspectRatio="none"
-                  aria-label="Enrollment trend chart"
-                >
-                  <defs>
-                    <linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1">
-                      <stop offset="0%" stopColor="#6d5dfc" stopOpacity=".22" />
-                      <stop offset="100%" stopColor="#6d5dfc" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-                  <path
-                    d="M0 142 C45 138 58 114 105 121 S165 99 210 108 S267 74 315 91 S365 54 420 70 S475 50 525 57 S580 20 620 39 S668 24 700 12 V170 H0Z"
-                    fill="url(#chartFill)"
-                  />
-                  <path
-                    d="M0 142 C45 138 58 114 105 121 S165 99 210 108 S267 74 315 91 S365 54 420 70 S475 50 525 57 S580 20 620 39 S668 24 700 12"
-                    fill="none"
-                    stroke="#6d5dfc"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                  />
-                </svg>
-                <div className="chart-x">
-                  <span>Apr</span>
-                  <span>May</span>
-                  <span>Jun</span>
-                  <span>Jul</span>
-                  <span>Aug</span>
-                  <span>Sep</span>
-                </div>
-              </div>
-            </div>
-          </section>
         </div>
       </section>
     </main>
-  );
-}
 
-function StatCard({
-  label,
-  value,
-  change,
-  icon,
-  tone,
-}: {
-  label: string;
-  value: string;
-  change: string;
-  icon: React.ReactNode;
-  tone: string;
-}) {
-  return (
-    <div className="stat-card">
-      <div className={`stat-icon ${tone}`}>{icon}</div>
-      <div className="stat-label">{label}</div>
-      <div className="stat-value">{value}</div>
-      <div className="stat-change">
-        <span>↑ {change}</span> <small>vs last month</small>
+      {/* Footer */ }
+  <footer className="border-t border-white/5 py-12 relative z-10 backdrop-blur-lg mt-auto">
+    <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
+      <div className="flex items-center gap-3">
+        <GraduationCap className="w-5 h-5 text-indigo-500" />
+        <span className="font-semibold text-slate-300">Northstar University</span>
       </div>
+      <p className="text-slate-500 text-sm font-medium">
+        © {new Date().getFullYear()} Northstar Systems. Premium software for education.
+      </p>
     </div>
+  </footer>
+    </div >
   );
-}
-
-function PanelHeading({
-  title,
-  action,
-  dropdown,
-}: {
-  title: string;
-  action: string;
-  dropdown?: boolean;
-}) {
-  return (
-    <div className="panel-heading">
-      <h2>{title}</h2>
-      <button>
-        {action}{" "}
-        {dropdown ? <ChevronDown size={15} /> : <ArrowUpRight size={15} />}
-      </button>
-    </div>
-  );
-}
-
-function ScheduleItem({
-  time,
-  period,
-  title,
-  detail,
-  color,
-}: {
-  time: string;
-  period: string;
-  title: string;
-  detail: string;
-  color: string;
-}) {
-  return (
-    <div className="schedule-item">
-      <div className="schedule-time">
-        <strong>{time}</strong>
-        <span>{period}</span>
-      </div>
-      <div className={`schedule-marker ${color}`} />
-      <div className="schedule-copy">
-        <strong>{title}</strong>
-        <span>{detail}</span>
-      </div>
-      <MoreHorizontal size={18} className="muted-icon" />
-    </div>
-  );
-}
-
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-}
-
-function formatRole(role: User["role"]) {
-  return role === "SUPER_ADMIN" ? "Super administrator" : role.toLowerCase();
 }

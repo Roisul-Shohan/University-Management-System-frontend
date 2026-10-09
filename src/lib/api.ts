@@ -1,10 +1,52 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
+let isRefreshing = false;
+let refreshPromise: Promise<string | null> | null = null;
+
 type ApiEnvelope<T> = {
   data: T;
   message: string;
   meta?: { page: number; limit: number; total: number };
 };
+
+async function refreshAccessToken(): Promise<string | null> {
+  if (typeof window === "undefined") return null;
+
+  if (isRefreshing) {
+    return refreshPromise;
+  }
+
+  isRefreshing = true;
+  refreshPromise = (async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/auth/refresh-token`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const body = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(body?.message ?? "Token refresh failed");
+      }
+
+      const accessToken = body.data?.accessToken;
+      if (accessToken) {
+        window.localStorage.setItem("accessToken", accessToken);
+        return accessToken;
+      }
+      return null;
+    } catch {
+      window.localStorage.removeItem("accessToken");
+      return null;
+    } finally {
+      isRefreshing = false;
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
+}
 
 async function requestEnvelope<T>(
   path: string,
@@ -15,17 +57,29 @@ async function requestEnvelope<T>(
       ? window.localStorage.getItem("accessToken")
       : null;
 
-  const response = await fetch(`${API_URL}${path}`, {
-    ...options,
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
-  });
+  const makeRequest = async (authToken: string | null) => {
+    return fetch(`${API_URL}${path}`, {
+      ...options,
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+        ...options.headers,
+      },
+    });
+  };
 
-  const body = await response.json().catch(() => null);
+  let response = await makeRequest(token);
+  let body = await response.json().catch(() => null);
+
+  if (response.status === 401 && token && path !== "/api/auth/refresh-token") {
+    const newToken = await refreshAccessToken();
+    if (newToken) {
+      response = await makeRequest(newToken);
+      body = await response.json().catch(() => null);
+    }
+  }
+
   if (!response.ok) {
     throw new Error(body?.message ?? "Something went wrong. Please try again.");
   }
@@ -55,6 +109,25 @@ export const authApi = {
       document.cookie = `northstar-role=${result.user.role}; Path=/; SameSite=Lax`;
     }
     return result;
+  },
+  register: async (name: string, email: string, password: string, role: User["role"]) => {
+    const result = await apiRequest<{ message: string }>(
+      "/api/auth/register",
+      { method: "POST", body: JSON.stringify({ name, email, password, role }) },
+    );
+    return { email, message: result.message };
+  },
+  verifyEmail: async (email: string, otp: string) => {
+    return apiRequest<{ user: User; accessToken?: string }>(
+      "/api/auth/verify-email",
+      { method: "POST", body: JSON.stringify({ email, otp }) },
+    );
+  },
+  resendOtp: async (email: string) => {
+    return apiRequest<{ message: string }>(
+      "/api/auth/resend-otp",
+      { method: "POST", body: JSON.stringify({ email }) },
+    );
   },
   me: () => apiRequest<User>("/api/auth/me"),
   logout: async () => {
@@ -264,4 +337,27 @@ export type User = {
   email: string;
   role: "STUDENT" | "TEACHER" | "SUPER_ADMIN";
   status?: string;
+  teacher?: {
+    id: string;
+    departmentId: string;
+    isDeptAdmin: boolean;
+    department: {
+      id: string;
+      name: string;
+      code: string;
+    };
+  } | null;
+  student?: {
+    id: string;
+    programId: string;
+    program: {
+      id: string;
+      degreeType: string;
+      department: {
+        id: string;
+        name: string;
+        code: string;
+      };
+    } | null;
+  } | null;
 };

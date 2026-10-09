@@ -10,6 +10,7 @@ export type Student = {
   isActive: boolean;
   programStatus: "ACTIVE" | "GRADUATED" | "SUSPENDED" | "WITHDRAWN";
   program: Program & { department: Department };
+  user: { id: string; name: string; email: string };
 };
 
 export type StudentQuery = {

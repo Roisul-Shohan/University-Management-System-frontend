@@ -16,6 +16,7 @@ type AuthContextValue = {
   loading: boolean;
   refreshUser: () => Promise<void>;
   logout: () => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -43,14 +44,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     queryClient.setQueryData(["auth", "me"], null);
   }, [queryClient]);
 
+  const login = useCallback(
+    async (email: string, password: string) => {
+      const result = await authApi.login(email, password);
+      queryClient.setQueryData(["auth", "me"], result.user);
+      return result.user;
+    },
+    [queryClient],
+  );
+
   const value = useMemo(
     () => ({
       user: sessionQuery.data ?? null,
       loading: sessionQuery.isPending,
       refreshUser,
       logout,
+      login,
     }),
-    [sessionQuery.data, sessionQuery.isPending, refreshUser, logout],
+    [sessionQuery.data, sessionQuery.isPending, refreshUser, logout, login],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
