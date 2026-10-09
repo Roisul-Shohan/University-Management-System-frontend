@@ -72,49 +72,8 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Presentation Graphic */}
-        <div className="max-w-6xl mx-auto px-6 mb-32 hidden md:block">
-          <div className="rounded-2xl border border-white/10 bg-slate-900/50 backdrop-blur-sm p-2 shadow-2xl relative">
-            <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/10 to-transparent rounded-2xl pointer-events-none" />
-            <div className="aspect-[16/9] rounded-xl bg-slate-950 border border-white/5 overflow-hidden relative flex items-center justify-center">
-              {/* Dashboard abstract representation */}
-              <div className="absolute inset-0 grid grid-cols-4 grid-rows-3 gap-4 p-8 opacity-40">
-                <div className="col-span-1 row-span-3 rounded-lg border border-white/10 bg-white/5" />
-                <div className="col-span-3 row-span-1 rounded-lg border border-white/10 bg-white/5 flex items-center px-6">
-                  <div className="w-1/3 h-4 bg-white/10 rounded-full" />
-                </div>
-                <div className="col-span-3 row-span-2 grid grid-cols-3 gap-4">
-                  <div className="rounded-lg border border-indigo-500/20 bg-indigo-500/5 p-4 flex flex-col justify-between">
-                    <div className="w-8 h-8 rounded-full bg-indigo-500/20" />
-                    <div className="w-full h-2 bg-indigo-500/20 rounded-full mt-4" />
-                    <div className="w-2/3 h-2 bg-indigo-500/20 rounded-full mt-2" />
-                  </div>
-                  <div className="rounded-lg border border-purple-500/20 bg-purple-500/5 p-4 flex flex-col justify-between">
-                    <div className="w-8 h-8 rounded-full bg-purple-500/20" />
-                    <div className="w-full h-2 bg-purple-500/20 rounded-full mt-4" />
-                    <div className="w-2/3 h-2 bg-purple-500/20 rounded-full mt-2" />
-                  </div>
-                  <div className="rounded-lg border border-white/10 bg-white/5 p-4 flex flex-col justify-between">
-                    <div className="w-8 h-8 rounded-full bg-white/10" />
-                    <div className="w-full h-2 bg-white/10 rounded-full mt-4" />
-                    <div className="w-2/3 h-2 bg-white/10 rounded-full mt-2" />
-                  </div>
-                  <div className="col-span-3 rounded-lg border border-white/10 bg-white/5 p-6 flex items-end">
-                    <div className="w-full h-32 flex items-end gap-2">
-                      {[40, 70, 45, 90, 65, 100, 80].map((h, i) => (
-                        <div key={i} className="flex-1 bg-gradient-to-t from-indigo-500/40 to-transparent rounded-t-sm" style={{ height: `${h}%` }} />
-                       ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent z-10" />
-            </div>
-          </div>
-        </div>
-
         {/* Features Section */}
-        <section id="features" className="py-24 border-t border-white/5 bg-slate-900/20">
+        <section id="features" className="py-16 border-t border-white/5 bg-slate-900/20">
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-20">
               <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-6">Built for performance.</h2>
